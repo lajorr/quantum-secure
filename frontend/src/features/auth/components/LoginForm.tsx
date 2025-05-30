@@ -1,0 +1,90 @@
+import { CircularProgress } from '@mui/material';
+import type { FormEvent } from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { login } from "../services/authService";
+
+
+export default function LoginForm() {
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const result = await login(email, password);
+    setIsLoading(false);
+    if (result.success && result.user) {
+      setUser(result.user);
+      navigate('/');
+    } else {
+      alert(result.message);
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen bg-gray-200 flex items-center justify-center">
+      <div className="w-full max-w-[1440px] flex justify-center">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-md p-6 bg-white rounded-lg shadow-md"
+        >
+          <h2 className="text-2xl font-bold mb-4">Login</h2>
+          <div className="mb-4">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Login'
+            )}
+          </button>
+          <p className="mt-4 text-center">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-blue-500 hover:underline">
+              Sign Up
+            </Link>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}

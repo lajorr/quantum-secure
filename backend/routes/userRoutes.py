@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from bson import ObjectId
 from config.database import collection_name
 from model.user import UserCreate, UserInDB, Token, UserBase, UserResponse
 from auth import hashed_password, verify_password, create_access_token, decoded_access_token

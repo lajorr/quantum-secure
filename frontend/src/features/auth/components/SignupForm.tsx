@@ -1,7 +1,7 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { signup } from "../services/authService";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function SignupForm() {
   const [name, setName] = useState("");
@@ -9,16 +9,14 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const authContext = useAuth();
+  const navigate = useNavigate();
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password === confirmPassword) {
-      const result = await signup(name, email, password);
-      if (result.success) {
-        alert(result.message);
-        // Redirect or update state as needed
-      } else {
-        alert(result.message);
-      }
+      await authContext.signup(name, email, password);
+      navigate("/login");
     } else {
       alert("Passwords do not match");
     }
@@ -37,7 +35,7 @@ export default function SignupForm() {
               htmlFor="name"
               className="block text-sm font-medium text-gray-700"
             >
-              Name
+              Username
             </label>
             <input
               type="text"

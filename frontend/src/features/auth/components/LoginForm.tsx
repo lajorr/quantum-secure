@@ -1,30 +1,38 @@
-import { CircularProgress } from '@mui/material';
+import { CircularProgress } from "@mui/material";
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { login } from "../services/authService";
-
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const authContext = useAuth();
+  const hasError = authContext.hasError;
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const result = await login(email, password);
+    try {
+      await authContext.login(email, password);
+      navigate("/");
+    } catch (error) {}
     setIsLoading(false);
-    if (result.success && result.user) {
-      setUser(result.user);
-      navigate('/');
-    } else {
-      alert(result.message);
-    }
+    // if (result.success && result.user) {
+    //   setUser(result.user);
+    //   navigate("/");
+    // } else {
+    //   alert(result.message);
+    // }
   };
+
+  useEffect(() => {
+    if (hasError) {
+      alert("Login failed");
+    }
+  }, [hasError]);
 
   return (
     <div className="h-screen w-screen bg-gray-200 flex items-center justify-center">
@@ -74,7 +82,7 @@ export default function LoginForm() {
             {isLoading ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              'Login'
+              "Login"
             )}
           </button>
           <p className="mt-4 text-center">

@@ -43,7 +43,7 @@ export const chatList: ChatListItem[] = [
   {
     id: "1",
     user: users[0],
-    lastMessage: "The weather will be perfect for th...",
+    lastMessage: "hello",
     lastMessageTime: "9:41 AM",
     unreadCount: 0,
   },

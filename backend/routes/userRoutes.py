@@ -33,17 +33,17 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not verify_password(form_data.password, user["hashed_password"]):
         raise HTTPException(status_code=400, detail="Incorrect password")
     
-    token = create_access_token({"sub": user["username"]})
+    token = create_access_token({"sub": user["username"], "id" :str(user["_id"])})
     return {"access_token": token, "token_type": "bearer"}
 
 # Protected Route
-@router.get("/me", response_model=UserResponse)
+@router.get("/user/data", response_model=UserResponse)
 async def read_users_me(token: str = Depends(oauth2_scheme)):
-    username = decoded_access_token(token)
-    if username is None:
+    id = decoded_access_token(token)
+    if id is None:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
-    user = await collection_name.find_one({"username": username})
+    user = await collection_name.find_one({"_id": id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     

@@ -29,7 +29,8 @@ def decoded_access_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
-        return username
+        user_id = payload.get("id")
+        return user_id
     except JWTError:
         return None
     

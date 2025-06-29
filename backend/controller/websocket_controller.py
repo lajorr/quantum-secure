@@ -1,7 +1,10 @@
 from fastapi import WebSocket
-from typing import List, Dict
+from typing import  Dict
 import json
 import logging
+
+from datetime import datetime
+from config.database import message_collection
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,7 +46,6 @@ class ConnectionManager:
 # Create a global connection manager instance
 manager = ConnectionManager()
 
-
 async def handle_websocket(websocket: WebSocket, client_id: str):
     logger.info(f"New WebSocket connection request from client: {client_id}")
     await manager.connect(websocket, client_id)
@@ -53,12 +55,33 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
             logger.info(f"Received message from client {client_id}: {data}")
             try:
                 message_data = json.loads(data)
-                await manager.broadcast(json.dumps({
+                
+                # Save message to DB
+                message_doc = {
+                    "sender_id": client_id,
+                    "receiver_id": message_data.get("to_client_id"),  # Expect recipient ID
+                    "content": message_data.get("message"),
+                    "timestamp": datetime.utcnow()
+                }
+                await message_collection.insert_one(message_doc)
+                
+                # Send to sender (echo)
+                await manager.send_personal_message(json.dumps({
                     "client_id": client_id,
-                    "message": message_data
-                }))
+                    "message": message_data.get("message"),
+                    "timestamp": str(message_doc["timestamp"])
+                }), client_id)
+                
+                # Send to recipient if connected
+                to_client = message_data.get("to_client_id")
+                if to_client and to_client in manager.active_connections:
+                    await manager.send_personal_message(json.dumps({
+                        "client_id": client_id,
+                        "message": message_data.get("message"),
+                        "timestamp": str(message_doc["timestamp"])
+                    }), to_client)
+                
             except json.JSONDecodeError:
-                logger.error(f"Invalid JSON from client {client_id}: {data}")
                 await manager.send_personal_message(
                     json.dumps({"error": "Invalid message format"}),
                     client_id

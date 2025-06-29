@@ -31,7 +31,7 @@ async def get_friends_list(token: str = Depends(oauth2_scheme)):
     id = decoded_access_token(token)
     if id is None:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    friends_list = await user_collection.find({"_id": {"$ne": ObjectId(id)}}).to_list()
+    friends_list = await user_collection.find({"_id": {"$ne": ObjectId(id)}}).to_list(length=10)
     friends_list = [user_serializer(friend) for friend in friends_list]
     print(friends_list)
     return friends_list

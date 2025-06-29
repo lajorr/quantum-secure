@@ -7,6 +7,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class ConnectionManager:
     def __init__(self):
         # Store active connections
@@ -24,7 +25,8 @@ class ConnectionManager:
         if client_id in self.active_connections:
             del self.active_connections[client_id]
             logger.info(f"Client {client_id} disconnected")
-            logger.info(f"Remaining connections: {len(self.active_connections)}")
+            logger.info(
+                f"Remaining connections: {len(self.active_connections)}")
 
     async def send_personal_message(self, message: str, client_id: str):
         if client_id in self.active_connections:
@@ -32,12 +34,15 @@ class ConnectionManager:
             logger.info(f"Sent personal message to client {client_id}")
 
     async def broadcast(self, message: str):
-        logger.info(f"Broadcasting message to {len(self.active_connections)} clients")
+        logger.info(
+            f"Broadcasting message to {len(self.active_connections)} clients")
         for connection in self.active_connections.values():
             await connection.send_text(message)
 
+
 # Create a global connection manager instance
 manager = ConnectionManager()
+
 
 async def handle_websocket(websocket: WebSocket, client_id: str):
     logger.info(f"New WebSocket connection request from client: {client_id}")
@@ -61,4 +66,4 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
     except Exception as e:
         logger.error(f"WebSocket error for client {client_id}: {str(e)}")
     finally:
-        manager.disconnect(client_id) 
+        manager.disconnect(client_id)

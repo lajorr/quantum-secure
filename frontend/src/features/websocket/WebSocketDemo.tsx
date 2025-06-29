@@ -10,7 +10,12 @@ export const WebSocketDemo: React.FC = () => {
   useEffect(() => {
     // Add message handler when component mounts
     const cleanup = addMessageHandler((message) => {
-      setMessages((prev) => [...prev, message]);
+      console.log("Received message:", message);
+      setMessages((prev) => {
+        const updated = [...prev, message];
+        console.log("Messages state updated:", updated);
+        return updated;
+      });
     });
 
     // Cleanup when component unmounts

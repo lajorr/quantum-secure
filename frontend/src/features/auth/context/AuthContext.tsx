@@ -1,131 +1,129 @@
-import { createContext, type ReactNode, useContext, useState } from 'react'
-import type { User } from '../../../shared/types/User'
-import { getUserDetails } from '../../chat/services/userServices'
-import { login as apiLogin, signup as register } from '../services/authService'
+import { createContext, type ReactNode, useContext, useState } from "react";
+import type { User } from "../../../shared/types/User";
+import { getUserDetails } from "../../chat/services/userServices";
+import { login as apiLogin, signup as register } from "../services/authService";
 
 type AuthContextType = {
-  user: User | null
-  hasError: boolean
-  signup: (username: string, email: string, password: string) => Promise<void>
-  login: (email: string, password: string) => Promise<void>
-  isAuthenticated: boolean
-  checkToken: () => Promise<void>
-  authLoading: boolean
-  logout: () => void
-}
+  user: User | null;
+  hasError: boolean;
+  signup: (username: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  isAuthenticated: boolean;
+  checkToken: () => Promise<void>;
+  authLoading: boolean;
+  logout: () => void;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [hasError, setHasError] = useState<boolean>(false)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-  const [user, setUser] = useState<User | null>(null)
-  const [authLoading, setAuthLoading] = useState(false)
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const signup = async (username: string, email: string, password: string) => {
     try {
-      await register(email, username, password)
-      setHasError(false)
+      await register(email, username, password);
+      setHasError(false);
     } catch (error) {
-      setHasError(true)
+      setHasError(true);
     }
-  }
+  };
 
   const login = async (email: string, password: string) => {
     try {
-      setAuthLoading(true)
-      const response = await apiLogin(email, password)
-      localStorage.setItem('token', response.access_token)
-      setIsAuthenticated(true)
-      setHasError(false)
+      setAuthLoading(true);
+      const response = await apiLogin(email, password);
+      localStorage.setItem("token", response.access_token);
+      setIsAuthenticated(true);
+      setHasError(false);
       // Fetch user data after successful login
-      await getUserData()
+      await getUserData();
     } catch (error) {
-      setHasError(true)
-      setIsAuthenticated(false)
-      setAuthLoading(false)
+      setHasError(true);
+      setIsAuthenticated(false);
+      setAuthLoading(false);
     }
-  }
+  };
 
   const logout = () => {
-    localStorage.removeItem('token')
-    setIsAuthenticated(false)
-    setUser(null)
-    setHasError(false)
-  }
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    setUser(null);
+    setHasError(false);
+  };
 
   const getUserData = async () => {
     try {
-      setAuthLoading(true)
+      setAuthLoading(true);
 
-      const userData: User = await getUserDetails()
-      console.log('User Data:', userData)
-      setUser(userData)
+      const userData: User = await getUserDetails();
+      console.log("User Data:", userData);
+      setUser(userData);
     } catch (error) {
-      console.error('Failed to get user data:', error)
-      setAuthLoading(false)
+      console.error("Failed to get user data:", error);
+      setAuthLoading(false);
 
-      throw error
+      throw error;
     }
-  }
+  };
 
   const checkToken = async () => {
     try {
-      setAuthLoading(true)
-      const token = localStorage.getItem('token')
-      console.log('Checking token:', token ? 'Token exists' : 'No token')
+      const token = localStorage.getItem("token");
+      console.log("Checking token:", token ? "Token exists" : "No token");
 
       if (!token) {
-        setIsAuthenticated(false)
-        setUser(null)
-        setAuthLoading(false)
-        return
+        setIsAuthenticated(false);
+        setUser(null);
+        return;
       }
 
-      console.log('Attempting to validate token with backend...')
+      console.log("Attempting to validate token with backend...");
       // Validate token by fetching user details
-      await getUserData()
-      console.log('Token validation successful')
-      setIsAuthenticated(true)
-      setHasError(false)
+      await getUserData();
+      console.log("Token validation successful");
+      setIsAuthenticated(true);
+      setHasError(false);
     } catch (error: any) {
-      console.error('Token validation failed:', error)
-      console.error('Error details:', {
+      console.error("Token validation failed:", error);
+      console.error("Error details:", {
         status: error?.response?.status,
         message: error?.message,
         response: error?.response?.data,
-      })
+      });
 
       // Only logout if it's an authentication error (401)
       if (error?.response?.status === 401) {
-        console.log('Authentication error (401), logging out user')
-        logout()
-        setHasError(true)
+        console.log("Authentication error (401), logging out user");
+        logout();
+        setHasError(true);
       } else {
         // For other errors (network, server down, etc.),
         // keep the user logged in if they have a token
         console.error(
-          'Non-auth error during token check, keeping user logged in'
-        )
-        const token = localStorage.getItem('token')
+          "Non-auth error during token check, keeping user logged in"
+        );
+        const token = localStorage.getItem("token");
         if (token) {
           console.log(
-            'Token exists in localStorage, keeping user authenticated'
-          )
-          setIsAuthenticated(true)
-          setHasError(false)
-          setAuthLoading(false)
+            "Token exists in localStorage, keeping user authenticated"
+          );
+          setIsAuthenticated(true);
+          setHasError(false);
+          setAuthLoading(false);
         } else {
-          setAuthLoading(false)
+          setAuthLoading(false);
 
-          console.log('No token in localStorage, logging out')
-          logout()
+          console.log("No token in localStorage, logging out");
+          logout();
         }
       }
     } finally {
-      setAuthLoading(false)
+      setAuthLoading(false);
     }
-  }
+  };
 
   return (
     <AuthContext.Provider
@@ -142,11 +140,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     >
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('useAuth must be used within AuthProvider')
-  return context
-}
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  return context;
+};

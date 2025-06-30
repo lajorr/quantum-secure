@@ -1,114 +1,111 @@
-import { useState, useEffect } from 'react'
-import ChatMessages from './ChatMessages'
-import ChatInput from './ChatInput'
-import ChatList from './ChatList'
-import { useWebSocket } from '../../../shared/hooks/useWebSocket'
-import { useChat } from '../context/ChatContext' // adjust path if needed
-import type { Message } from '../types/chat'
-import { WebSocketService } from '../../../shared/services/websocket.service'
-import ChatHeader from './ChatHeader'
-import type { User } from '../../../shared/types/User'
-import { useAuth } from '../../auth/context/AuthContext'
-import { useNavigate } from 'react-router-dom'
-import LogoutIcon from '@mui/icons-material/Logout'
-import { Avatar } from '@mui/material'
+import LogoutIcon from "@mui/icons-material/Logout";
+import { Avatar } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useWebSocket } from "../../../shared/hooks/useWebSocket";
+import { WebSocketService } from "../../../shared/services/websocket.service";
+import type { User } from "../../../shared/types/User";
+import { useAuth } from "../../auth/context/AuthContext";
+import { useChat } from "../context/ChatContext"; // adjust path if needed
+import type { Message } from "../types/chat";
+import ChatHeader from "./ChatHeader";
+import ChatInput from "./ChatInput";
+import ChatList from "./ChatList";
+import ChatMessages from "./ChatMessages";
 
 export default function ChatScreen() {
-  const [selectedChatId, setSelectedChatId] = useState<string>('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [selectedUser, setSelectedUser] = useState<User | null>()
+  const [selectedChatId, setSelectedChatId] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>();
 
-  const { currentUser, friendList, isLoading } = useChat()
-  const { sendMessage, addMessageHandler, getClientId } = useWebSocket()
-  const { logout, isAuthenticated } = useAuth()
-  const navigate = useNavigate()
+  const { currentUser, friendList, isLoading } = useChat();
+  const { sendMessage, addMessageHandler, getClientId } = useWebSocket();
+  const { logout, isAuthenticated } = useAuth();
 
-  const wsService = WebSocketService.getInstance()
-
-  if (isLoading || !currentUser) {
-    return <div className="p-4">Loading chat...</div>
-  }
+  const wsService = WebSocketService.getInstance();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      console.log('not auth')
-      // navigate('/login')
-      logout()
+      console.log("not auth");
+      logout();
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    if (!friendList || friendList.length === 0) return
-    const user = friendList.find((u) => u.id === selectedChatId) || null
-    setSelectedUser(user)
-  }, [selectedChatId, friendList])
+    if (!friendList || friendList.length === 0) return;
+    const user = friendList.find((u) => u.id === selectedChatId) || null;
+    setSelectedUser(user);
+  }, [selectedChatId, friendList]);
 
   useEffect(() => {
     const removeHandler = addMessageHandler((msg) => {
-      const incoming = msg.message
+      const incoming = msg.message;
 
       // Check if message ID already exists in state
       setMessages((prev) => {
-        const exists = prev.some((m) => m.id === incoming.id)
-        if (exists) return prev
+        const exists = prev.some((m) => m.id === incoming.id);
+        if (exists) return prev;
 
         const isRelevant =
           (incoming.sender.id === selectedChatId &&
-            incoming.receiverId === currentUser.id) ||
-          (incoming.sender.id === currentUser.id &&
-            incoming.receiverId === selectedChatId)
+            incoming.receiverId === currentUser?.id) ||
+          (incoming.sender.id === currentUser?.id &&
+            incoming.receiverId === selectedChatId);
 
-        if (!isRelevant) return prev
+        if (!isRelevant) return prev;
 
         return [
           ...prev,
           {
             ...incoming,
-            isOwn: incoming.sender.id === currentUser.id,
+            isOwn: incoming.sender.id === currentUser?.id,
           },
-        ]
-      })
-    })
+        ];
+      });
+    });
 
-    return () => removeHandler()
-  }, [selectedChatId, currentUser.id, addMessageHandler])
+    return () => removeHandler();
+  }, [selectedChatId, currentUser?.id, addMessageHandler]);
 
   useEffect(() => {
-    setMessages([])
-  }, [selectedChatId])
+    setMessages([]);
+  }, [selectedChatId]);
   const handleAvatarClick = () => {
     // eslint-disable-next-line no-console
-    console.log('Current User:', currentUser)
-  }
+    console.log("Current User:", currentUser);
+  };
 
   const handleSend = (text: string) => {
     const messageData: Message = {
       id: crypto.randomUUID(),
-      sender: currentUser,
+      sender: currentUser!,
       receiverId: selectedChatId,
       content: text,
       timestamp: new Date().toISOString(),
       isOwn: true,
-    }
+    };
     if (!wsService.isReady()) {
-      console.warn('WebSocket not connected yet. Message queued.')
-      return
+      console.warn("WebSocket not connected yet. Message queued.");
+      return;
     }
 
-    console.log(selectedChatId)
-    console.log(currentUser)
-    sendMessage(messageData)
-    setMessages((prev) => [...prev, messageData])
-  }
+    console.log(selectedChatId);
+    console.log(currentUser);
+    sendMessage(messageData);
+    setMessages((prev) => [...prev, messageData]);
+  };
+
+  // if (isLoading || !currentUser) {
+  //   return <div className="p-4">Loading chat...</div>;
+  // }
 
   return (
     <div className="h-screen w-screen bg-gray-200 flex justify-center">
       <div className="flex h-full w-full max-w-[1440px]">
         <div className="w-min bg-gray-800 text-white p-2 flex flex-col gap-4 items-center justify-end">
           <LogoutIcon
-            sx={{ cursor: 'pointer' }}
+            sx={{ cursor: "pointer" }}
             onClick={() => {
-              logout()
+              logout();
             }}
           />
           <div className=" cursor-pointer" onClick={handleAvatarClick}>
@@ -132,5 +129,5 @@ export default function ChatScreen() {
         </div>
       </div>
     </div>
-  )
+  );
 }

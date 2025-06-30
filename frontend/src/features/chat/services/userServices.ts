@@ -2,7 +2,7 @@ import api from "../../../api/api";
 
 export const getUserDetails = async () => {
   const token = localStorage.getItem("token");
-  console.log("getUserDetails - Token:", token ? "exists" : "missing");
+  console.log("getUserDetails - Token:", token);
   
   if (!token) {
     console.log("getUserDetails - No token, returning undefined");

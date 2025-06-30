@@ -1,65 +1,114 @@
-import LogoutIcon from "@mui/icons-material/Logout";
-import { Avatar } from "@mui/material";
-import { useEffect, useState } from "react";
-import { allMessages } from "../../../constants/chatData";
-import type { User } from "../../../shared/types/User";
-import { useAuth } from "../../auth/context/AuthContext";
-import { useChat } from "../context/ChatContext";
-import ChatHeader from "./ChatHeader";
-import ChatInput from "./ChatInput";
-import ChatList from "./ChatList";
-import ChatMessages from "./ChatMessages";
+import { useState, useEffect } from 'react'
+import ChatMessages from './ChatMessages'
+import ChatInput from './ChatInput'
+import ChatList from './ChatList'
+import { useWebSocket } from '../../../shared/hooks/useWebSocket'
+import { useChat } from '../context/ChatContext' // adjust path if needed
+import type { Message } from '../types/chat'
+import { WebSocketService } from '../../../shared/services/websocket.service'
+import ChatHeader from './ChatHeader'
+import type { User } from '../../../shared/types/User'
+import { useAuth } from '../../auth/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
+import LogoutIcon from '@mui/icons-material/Logout'
+import { Avatar } from '@mui/material'
 
-function ChatScreen() {
-  const { currentUser, getUserData, friendList, isLoading } = useChat();
-  const { logout, isAuthenticated } = useAuth();
-  useEffect(() => {
-    const fetchData = async () => {
-      await getUserData();
-    };
+export default function ChatScreen() {
+  const [selectedChatId, setSelectedChatId] = useState<string>('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [selectedUser, setSelectedUser] = useState<User | null>()
 
-    fetchData();
-  }, []);
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>();
-  // const selectedUser = friendList.find((c) => c.id === selectedUserId)!;
-  const messages = allMessages[1] || [];
+  const { currentUser, friendList, isLoading } = useChat()
+  const { sendMessage, addMessageHandler, getClientId } = useWebSocket()
+  const { logout, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+
+  const wsService = WebSocketService.getInstance()
+
+  if (isLoading || !currentUser) {
+    return <div className="p-4">Loading chat...</div>
+  }
 
   useEffect(() => {
     if (!isAuthenticated) {
-      logout();
+      console.log('not auth')
+      // navigate('/login')
+      logout()
     }
-  }, [isAuthenticated]);
+  }, [])
 
   useEffect(() => {
-    if (!friendList || friendList.length === 0) return;
-    setSelectedUserId(friendList[0].id);
-  }, [friendList]);
+    if (!friendList || friendList.length === 0) return
+    const user = friendList.find((u) => u.id === selectedChatId) || null
+    setSelectedUser(user)
+  }, [selectedChatId, friendList])
 
   useEffect(() => {
-    if (!friendList || friendList.length === 0) return;
-    const user = friendList.find(u => u.id === selectedUserId) || null;
-    setSelectedUser(user);
-  }, [selectedUserId, friendList]);
+    const removeHandler = addMessageHandler((msg) => {
+      const incoming = msg.message
 
-  const handleSend = (text: string) => {
-    // ws ma send
-    console.log("Send:", text);
-  };
+      // Check if message ID already exists in state
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === incoming.id)
+        if (exists) return prev
 
+        const isRelevant =
+          (incoming.sender.id === selectedChatId &&
+            incoming.receiverId === currentUser.id) ||
+          (incoming.sender.id === currentUser.id &&
+            incoming.receiverId === selectedChatId)
+
+        if (!isRelevant) return prev
+
+        return [
+          ...prev,
+          {
+            ...incoming,
+            isOwn: incoming.sender.id === currentUser.id,
+          },
+        ]
+      })
+    })
+
+    return () => removeHandler()
+  }, [selectedChatId, currentUser.id, addMessageHandler])
+
+  useEffect(() => {
+    setMessages([])
+  }, [selectedChatId])
   const handleAvatarClick = () => {
     // eslint-disable-next-line no-console
-    console.log("Current User:", currentUser);
-  };
-  if (isLoading) return <div>Loading...</div>;
+    console.log('Current User:', currentUser)
+  }
+
+  const handleSend = (text: string) => {
+    const messageData: Message = {
+      id: crypto.randomUUID(),
+      sender: currentUser,
+      receiverId: selectedChatId,
+      content: text,
+      timestamp: new Date().toISOString(),
+      isOwn: true,
+    }
+    if (!wsService.isReady()) {
+      console.warn('WebSocket not connected yet. Message queued.')
+      return
+    }
+
+    console.log(selectedChatId)
+    console.log(currentUser)
+    sendMessage(messageData)
+    setMessages((prev) => [...prev, messageData])
+  }
+
   return (
     <div className="h-screen w-screen bg-gray-200 flex justify-center">
       <div className="flex h-full w-full max-w-[1440px]">
         <div className="w-min bg-gray-800 text-white p-2 flex flex-col gap-4 items-center justify-end">
           <LogoutIcon
-            sx={{ cursor: "pointer" }}
+            sx={{ cursor: 'pointer' }}
             onClick={() => {
-              logout();
+              logout()
             }}
           />
           <div className=" cursor-pointer" onClick={handleAvatarClick}>
@@ -72,17 +121,16 @@ function ChatScreen() {
         </div>
         <ChatList
           friendList={friendList}
-          selectedChatId={selectedUserId}
-          onSelectChat={setSelectedUserId}
+          selectedChatId={selectedChatId}
+          onSelectChat={setSelectedChatId}
         />
-        <div className="flex flex-col flex-1 h-full">
+
+        <div className="flex flex-col flex-1">
           <ChatHeader user={selectedUser!!} />
           <ChatMessages messages={messages} />
-          <ChatInput onSend={handleSend} />
+          {selectedChatId && <ChatInput onSend={handleSend} />}
         </div>
       </div>
     </div>
-  );
+  )
 }
-
-export default ChatScreen;

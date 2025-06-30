@@ -1,26 +1,36 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../features/auth/context/AuthContext";
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../features/auth/context/AuthContext'
+import { LoginForm } from '../features/auth'
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, checkToken, authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { isAuthenticated, checkToken, authLoading } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
-    checkToken();
+    checkToken()
     // eslint-disable-next-line
-  }, []);
+  }, [])
+
+  // check if the token is verified
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      console.log('failed auth')
+      navigate('/login')
+    }
+  }, [authLoading, isAuthenticated, navigate])
 
   // Show loading spinner while checking authentication
   if (authLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
 
   // Only redirect if not authenticated and not loading
   if (!isAuthenticated) {
-    navigate("/login");
-    return null;
+    console.log('failed auth')
+    // navigate('/login')
+    return <LoginForm />
   }
 
-  return <>{children}</>;
-};
+  return <>{children}</>
+}

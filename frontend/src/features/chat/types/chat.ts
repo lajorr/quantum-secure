@@ -3,6 +3,7 @@ import type { User } from "../../../shared/types/User";
 export type Message = {
   id: string;
   sender: User;
+  receiverId : string;
   content: string;
   timestamp: string;
   imageUrl?: string;

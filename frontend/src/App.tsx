@@ -1,9 +1,8 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { LoginForm, SignupForm } from "./features/auth";
 import { AuthProvider } from "./features/auth/context/AuthContext";
-import { ChatScreen } from "./features/chat";
 import { ChatProvider } from "./features/chat/context/ChatContext";
-import { ProtectedRoute } from "./layouts/protectedRoute";
+import { WebSocketDemo } from "./features/websocket/WebSocketDemo";
 
 function App() {
   return (
@@ -14,9 +13,10 @@ function App() {
             <Route
               path="/"
               element={
-                <ProtectedRoute>
-                  <ChatScreen />
-                </ProtectedRoute>
+                <WebSocketDemo />
+                // <ProtectedRoute>
+                //   <ChatScreen />
+                // </ProtectedRoute>
               }
             />
             <Route path="/login" element={<LoginForm />} />

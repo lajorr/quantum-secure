@@ -1,12 +1,12 @@
-import type { User } from "../../../shared/types/User";
+import type { User } from '../../../shared/types/User'
 
 interface ChatHeaderProps {
-  user: User;
+  user: User
 }
 
 export default function ChatHeader({ user }: ChatHeaderProps) {
   if (!user) {
-    return null;
+    return null
   }
   return (
     <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-white">
@@ -22,5 +22,5 @@ export default function ChatHeader({ user }: ChatHeaderProps) {
         </div> */}
       </div>
     </div>
-  );
+  )
 }

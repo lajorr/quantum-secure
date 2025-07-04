@@ -1,11 +1,15 @@
 from fastapi import WebSocket
-from typing import List, Dict
+from typing import  Dict
 import json
 import logging
+
+from datetime import datetime
+from config.database import message_collection
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class ConnectionManager:
     def __init__(self):
@@ -24,7 +28,8 @@ class ConnectionManager:
         if client_id in self.active_connections:
             del self.active_connections[client_id]
             logger.info(f"Client {client_id} disconnected")
-            logger.info(f"Remaining connections: {len(self.active_connections)}")
+            logger.info(
+                f"Remaining connections: {len(self.active_connections)}")
 
     async def send_personal_message(self, message: str, client_id: str):
         if client_id in self.active_connections:
@@ -32,9 +37,11 @@ class ConnectionManager:
             logger.info(f"Sent personal message to client {client_id}")
 
     async def broadcast(self, message: str):
-        logger.info(f"Broadcasting message to {len(self.active_connections)} clients")
+        logger.info(
+            f"Broadcasting message to {len(self.active_connections)} clients")
         for connection in self.active_connections.values():
             await connection.send_text(message)
+
 
 # Create a global connection manager instance
 manager = ConnectionManager()
@@ -48,12 +55,33 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
             logger.info(f"Received message from client {client_id}: {data}")
             try:
                 message_data = json.loads(data)
-                await manager.broadcast(json.dumps({
+                
+                # Save message to DB
+                message_doc = {
+                    "sender_id": client_id,
+                    "receiver_id": message_data.get("to_client_id"),  # Expect recipient ID
+                    "content": message_data.get("message"),
+                    "timestamp": datetime.utcnow()
+                }
+                await message_collection.insert_one(message_doc)
+                
+                # Send to sender (echo)
+                await manager.send_personal_message(json.dumps({
                     "client_id": client_id,
-                    "message": message_data
-                }))
+                    "message": message_data.get("message"),
+                    "timestamp": str(message_doc["timestamp"])
+                }), client_id)
+                
+                # Send to recipient if connected
+                to_client = message_data.get("to_client_id")
+                if to_client and to_client in manager.active_connections:
+                    await manager.send_personal_message(json.dumps({
+                        "client_id": client_id,
+                        "message": message_data.get("message"),
+                        "timestamp": str(message_doc["timestamp"])
+                    }), to_client)
+                
             except json.JSONDecodeError:
-                logger.error(f"Invalid JSON from client {client_id}: {data}")
                 await manager.send_personal_message(
                     json.dumps({"error": "Invalid message format"}),
                     client_id
@@ -61,4 +89,4 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
     except Exception as e:
         logger.error(f"WebSocket error for client {client_id}: {str(e)}")
     finally:
-        manager.disconnect(client_id) 
+        manager.disconnect(client_id)

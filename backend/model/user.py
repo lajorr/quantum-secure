@@ -7,17 +7,17 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password : str
 
-
-
 class UserResponse(UserBase):
     id: str 
     
 class UserInDB(UserCreate):
-    hashed_pass : str
+    hashed_password : str
 
 class Token(BaseModel):
     access_token : str
     token_type : str
 
+
 class TokenData(BaseModel):
-    username : str | None = None
+    username: str | None = None
+    id: str | None = None

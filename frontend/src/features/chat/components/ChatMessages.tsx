@@ -1,5 +1,5 @@
-import type { Message } from '../types/chat';
-import ChatMessage from './ChatMessage';
+import type { Message } from "../types/chat";
+import ChatMessage from "./ChatMessage";
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -13,4 +13,4 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
       ))}
     </div>
   );
-} 
+}

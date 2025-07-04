@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useState } from "react";
 import type { User } from "../../../shared/types/User";
-import { getUserDetails } from "../../chat/services/userServices";
+import { getUserDetails } from "../../chat/services/chatServices";
 import { login as apiLogin, signup as register } from "../services/authService";
 
 type AuthContextType = {

@@ -1,13 +1,20 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "../../../shared/types/User";
 import { useAuth } from "../../auth/context/AuthContext";
-import { getUserDetails, getUserFiendList } from "../services/userServices";
+import {
+  fetchMessages,
+  getUserDetails,
+  getUserFiendList,
+} from "../services/chatServices";
+import type { Message } from "../types/chat";
 
 type ChatContextType = {
   isLoading: boolean;
   friendList: User[];
   currentUser: User | null;
   getUserData: () => Promise<void>;
+  generateChatId: (senderId: string, receiverId: string) => string;
+  getChatMessages: (chatId: string) => Promise<Message[]>;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -44,6 +51,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const generateChatId = (senderId: string, receiverId: string) => {
+    const sortedIds = [senderId, receiverId].sort();
+    return sortedIds.join("-");
+  };
+
   useEffect(() => {
     // Only fetch data if user is authenticated
     if (isAuthenticated) {
@@ -51,9 +63,26 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isAuthenticated]);
 
+  const getChatMessages = async (chatId: string): Promise<Message[]> => {
+    try {
+      const messages: Message[] = await fetchMessages(chatId);
+      return messages;
+    } catch (error) {
+      console.log("Error fetching messages:", error);
+      throw error;
+    }
+  };
+
   return (
     <ChatContext.Provider
-      value={{ getUserData, friendList, currentUser, isLoading }}
+      value={{
+        getUserData,
+        friendList,
+        currentUser,
+        isLoading,
+        generateChatId,
+        getChatMessages,
+      }}
     >
       {children}
     </ChatContext.Provider>

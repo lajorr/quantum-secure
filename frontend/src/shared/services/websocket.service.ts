@@ -1,6 +1,10 @@
 export interface WebSocketMessage {
-  client_id: string;
-  message: any;
+  id: string;
+  receiver_id: string;
+  sender_id: string;
+  timestamp: string;
+  content: string;
+  chat_id: string;
 }
 
 export class WebSocketService {
@@ -14,11 +18,11 @@ export class WebSocketService {
   // private isConnected: boolean = false
   // private messageQueue: any[] = []
 
-  // private constructor() {
-  //   // this.clientId = uuidv4()
-  //   // console.log('WebSocketService initialized with client ID:', this.clientId)
-  //   console.log("WebSocketService initialized");
-  // }
+  private constructor() {
+    // this.clientId = uuidv4()
+    // console.log('WebSocketService initialized with client ID:', this.clientId)
+    console.log("WebSocketService initialized");
+  }
 
   public static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
@@ -43,9 +47,9 @@ export class WebSocketService {
       return;
     }
 
-      const wsUrl = `ws://localhost:8000/ws/${this.clientId}`
-      console.log('Attempting to connect to WebSocket at:', wsUrl)
-      this.ws = new WebSocket(wsUrl)
+    const wsUrl = `ws://localhost:8000/ws/${this.clientId}`;
+    console.log("Attempting to connect to WebSocket at:", wsUrl);
+    this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
       console.log("WebSocket connected successfully");
@@ -57,15 +61,16 @@ export class WebSocketService {
       // this.messageQueue = []
     };
 
-      this.ws.onmessage = (event) => {
-        console.log('Received message:', event.data)
-        try {
-          const message: WebSocketMessage = JSON.parse(event.data)
-          this.messageHandlers.forEach((handler) => handler(message))
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error)
-        }
+    this.ws.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+
+        console.log("Received message:", message);
+        this.messageHandlers.forEach((handler) => handler(message));
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
       }
+    };
 
     this.ws.onclose = (event) => {
       console.log("WebSocket disconnected:", event.code, event.reason);
@@ -73,22 +78,22 @@ export class WebSocketService {
       // this.isConnected = false
     };
 
-      this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
-      }
-    }
+    this.ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+  }
 
-    private attemptReconnect(): void {
-      if (this.reconnectAttempts < this.maxReconnectAttempts) {
-        this.reconnectAttempts++
-        console.log(
-          `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
-        )
-        setTimeout(() => this.connect(), this.reconnectTimeout)
-      } else {
-        console.error('Max reconnection attempts reached')
-      }
+  private attemptReconnect(): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(
+        `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
+      );
+      setTimeout(() => this.connect(), this.reconnectTimeout);
+    } else {
+      console.error("Max reconnection attempts reached");
     }
+  }
 
   public disconnect(): void {
     console.log("Ws disconnected");
@@ -111,17 +116,17 @@ export class WebSocketService {
     }
   }
 
-    public addMessageHandler(handler: (message: WebSocketMessage) => void): void {
-      this.messageHandlers.push(handler)
-    }
-
-    public removeMessageHandler(
-      handler: (message: WebSocketMessage) => void
-    ): void {
-      this.messageHandlers = this.messageHandlers.filter((h) => h !== handler)
-    }
-
-    public getClientId(): string {
-      return this.clientId
-    }
+  public addMessageHandler(handler: (message: WebSocketMessage) => void): void {
+    this.messageHandlers.push(handler);
   }
+
+  public removeMessageHandler(
+    handler: (message: WebSocketMessage) => void
+  ): void {
+    this.messageHandlers = this.messageHandlers.filter((h) => h !== handler);
+  }
+
+  public getClientId(): string {
+    return this.clientId;
+  }
+}

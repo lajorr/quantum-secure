@@ -17,8 +17,9 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>();
 
-  const { currentUser, friendList, isLoading } = useChat();
-  const { sendMessage, addMessageHandler, getClientId } = useWebSocket();
+  const { currentUser, friendList, generateChatId, getChatMessages } =
+    useChat();
+  const { sendMessage, addMessageHandler } = useWebSocket();
   const { logout, isAuthenticated } = useAuth();
 
   const wsService = WebSocketService.getInstance();
@@ -31,25 +32,20 @@ export default function ChatScreen() {
   }, []);
 
   useEffect(() => {
-    if (!friendList || friendList.length === 0) return;
-    const user = friendList.find((u) => u.id === selectedChatId) || null;
-    setSelectedUser(user);
-  }, [selectedChatId, friendList]);
-
-  useEffect(() => {
     const removeHandler = addMessageHandler((msg) => {
-      const incoming = msg.message;
-
+      const incoming = msg;
       // Check if message ID already exists in state
       setMessages((prev) => {
+        if (!incoming || !incoming.sender_id) return prev;
         const exists = prev.some((m) => m.id === incoming.id);
         if (exists) return prev;
+        console.log("USERRR", selectedUser);
 
         const isRelevant =
-          (incoming.sender.id === selectedChatId &&
-            incoming.receiverId === currentUser?.id) ||
-          (incoming.sender.id === currentUser?.id &&
-            incoming.receiverId === selectedChatId);
+          (incoming.sender_id === selectedUser?.id &&
+            incoming.receiver_id === currentUser?.id) ||
+          (incoming.sender_id === currentUser?.id &&
+            incoming.receiver_id === selectedUser?.id);
 
         if (!isRelevant) return prev;
 
@@ -57,7 +53,8 @@ export default function ChatScreen() {
           ...prev,
           {
             ...incoming,
-            isOwn: incoming.sender.id === currentUser?.id,
+            id: incoming.id,
+            isOwn: incoming.sender_id === currentUser?.id,
           },
         ];
       });
@@ -67,18 +64,30 @@ export default function ChatScreen() {
   }, [selectedChatId, currentUser?.id, addMessageHandler]);
 
   useEffect(() => {
-    setMessages([]);
+    async function fetchMessages() {
+      if (selectedChatId) {
+        const chatMessages = await getChatMessages(selectedChatId);
+        setMessages(chatMessages);
+        setMessages((_) => {
+          return chatMessages.map((msg) => ({
+            ...msg,
+            isOwn: msg.sender_id === currentUser?.id,
+          }));
+        });
+      }
+    }
+    fetchMessages();
   }, [selectedChatId]);
+
   const handleAvatarClick = () => {
-    // eslint-disable-next-line no-console
     console.log("Current User:", currentUser);
   };
 
   const handleSend = (text: string) => {
     const messageData: Message = {
-      id: crypto.randomUUID(),
-      sender: currentUser!,
-      receiverId: selectedChatId,
+      chat_id: generateChatId(currentUser!.id, selectedUser!.id),
+      sender_id: currentUser!.id,
+      receiver_id: selectedUser!.id,
       content: text,
       timestamp: new Date().toISOString(),
       isOwn: true,
@@ -91,7 +100,6 @@ export default function ChatScreen() {
     console.log(selectedChatId);
     console.log(currentUser);
     sendMessage(messageData);
-    setMessages((prev) => [...prev, messageData]);
   };
 
   // if (isLoading || !currentUser) {
@@ -119,7 +127,12 @@ export default function ChatScreen() {
         <ChatList
           friendList={friendList}
           selectedChatId={selectedChatId}
-          onSelectChat={setSelectedChatId}
+          onSelectChat={(recieverId) => {
+            const chatId = generateChatId(currentUser!.id, recieverId);
+            setSelectedChatId(chatId);
+            const user = friendList.find((u) => u.id === recieverId) || null;
+            setSelectedUser(user);
+          }}
         />
 
         <div className="flex flex-col flex-1">

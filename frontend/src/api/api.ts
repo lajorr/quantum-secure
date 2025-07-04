@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const baseURL = import.meta.env.VITE_API_URL;
-console.log("API Base URL:", baseURL);
+// const baseURL = "http://192.168.49.97:8000";
 
 const api = axios.create({
   baseURL,
@@ -11,3 +11,7 @@ const api = axios.create({
 });
 
 export default api;
+
+export const axiosInstance = axios.create({
+  baseURL,
+});

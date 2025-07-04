@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { useAuth } from "../../features/auth/context/AuthContext";
 import type { WebSocketMessage } from "../services/websocket.service";
 import { WebSocketService } from "../services/websocket.service";
 import { useAuth } from "../../features/auth/context/AuthContext";

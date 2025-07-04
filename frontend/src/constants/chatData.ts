@@ -84,7 +84,7 @@ export const chatList: ChatListItem[] = [
     lastMessage: `You: Ok`,
     lastMessageTime: "12/13/21",
   },
-];
+];    
 
 export const allMessages: Record<string, Message[]> = {
   "1": [

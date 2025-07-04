@@ -10,8 +10,8 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
       {!isOwn && (
         <img
-          src={message.sender.avatarUrl}
-          alt={message.sender.name}
+          // src={message.sender.avatarUrl}
+          // alt={message.sender.name}
           className="w-8 h-8 rounded-full object-cover mr-3 border border-gray-300 self-end"
         />
       )}

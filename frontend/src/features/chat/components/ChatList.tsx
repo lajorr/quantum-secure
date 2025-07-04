@@ -1,9 +1,9 @@
-import type { User } from "../../../shared/types/User";
+import type { User } from '../../../shared/types/User'
 
 interface ChatListProps {
-  friendList: User[];
-  selectedChatId: string;
-  onSelectChat: (chatId: string) => void;
+  friendList: User[]
+  selectedChatId: string
+  onSelectChat: (chatId: string) => void
 }
 
 export default function ChatList({
@@ -11,6 +11,7 @@ export default function ChatList({
   selectedChatId,
   onSelectChat,
 }: ChatListProps) {
+  console.log(friendList)
   // Handle case where friendList is undefined or null
   if (!friendList || friendList.length === 0) {
     return (
@@ -26,7 +27,7 @@ export default function ChatList({
           <p className="text-gray-500">No friends available</p>
         </div>
       </aside>
-    );
+    )
   }
 
   return (
@@ -43,7 +44,7 @@ export default function ChatList({
           <li
             key={friend.id}
             className={`flex items-center px-4 py-3 cursor-pointer hover:bg-gray-100 transition ${
-              selectedChatId === friend.id ? "bg-gray-100" : ""
+              selectedChatId === friend.id ? 'bg-gray-100' : ''
             }`}
             onClick={() => onSelectChat(friend.id)}
           >
@@ -76,5 +77,5 @@ export default function ChatList({
         ))}
       </ul>
     </aside>
-  );
+  )
 }

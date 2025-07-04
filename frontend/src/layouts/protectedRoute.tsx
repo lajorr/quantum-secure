@@ -7,9 +7,19 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    checkToken();
-    // eslint-disable-next-line
+    console.log("in protected route");
+    (async () => {
+      await checkToken();
+    })();
   }, []);
+
+  // check if the token is verified
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      console.log("failed auth");
+      navigate("/login");
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   // Show loading spinner while checking authentication
   if (authLoading) {
@@ -17,10 +27,11 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Only redirect if not authenticated and not loading
-  if (!isAuthenticated) {
-    navigate("/login");
-    return null;
-  }
+  // if (!isAuthenticated) {
+  //   console.log("failed auth");
+  //   // navigate('/login')
+  //   return <LoginForm />;
+  // }
 
   return <>{children}</>;
 };

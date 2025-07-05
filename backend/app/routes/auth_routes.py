@@ -6,7 +6,9 @@ from ..utils.auth import get_access_token_details, get_refresh_token_details, ha
 from ..schema.schema import user_serializer
 from datetime import timedelta, datetime, timezone
 from ..config.redis import add_jti_to_blocklist
-router = APIRouter(tags=['Auth'])
+router = APIRouter(
+    prefix='/auth',
+    tags=['Auth'])
 
 
 # Register Route
@@ -46,34 +48,37 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
         # secure=True,# for production
         samesite="strict",
         expires=2 * 24 * 60 * 60,  # 2 days
-        path="/refresh_token"
+        path="/"
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/refresh_token")
-# async def refreshToken(refresh_token: TokenData = Depends(get_refresh_token_details)):
+@router.post("/refresh_token", response_model=Token)
 async def refreshToken(request: Request):
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
-    valid_refresh_token = get_refresh_token_details(refresh_token)
-
+    valid_refresh_token = await get_refresh_token_details(refresh_token)
     if valid_refresh_token.exp > datetime.now(timezone.utc):
         new_access_token = create_token(
             {
                 "user_id": valid_refresh_token.user_id
             }
         )
-        return {"access_token": new_access_token}
+        return {"access_token": new_access_token, "token_type": "bearer"}
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                         detail="Invalid or expired token")
 
 
-@router.get('/logout')
-async def revoke_token(token: TokenData = Depends(get_access_token_details)):
-    jti = token.jti
+@router.post('/logout')
+async def revoke_token(request: Request):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
+    valid_refresh_token = await get_refresh_token_details(refresh_token)
+    jti = valid_refresh_token.jti
     await add_jti_to_blocklist(jti)
 
     return {

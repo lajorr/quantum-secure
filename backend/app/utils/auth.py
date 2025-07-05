@@ -59,7 +59,7 @@ def decoded_access_token(token: str) -> TokenData | None:
         return None
 
 
-def verify_refresh_token(token: str, credentials_exception):
+async def verify_refresh_token(token: str, credentials_exception):
     try:
         payload = decoded_access_token(token)
         if not payload:
@@ -72,6 +72,8 @@ def verify_refresh_token(token: str, credentials_exception):
         if id and not refresh:
             raise credentials_exception
 
+        if await token_in_blacklist(payload.jti):
+            raise credentials_exception
         token_data = TokenData(
             user_id=id, exp=expiry_timestamp, refresh=refresh, jti=payload.jti)
     except JWTError:
@@ -93,6 +95,7 @@ async def verify_access_token(token: str, credentials_exception):
         if id and refresh:
             raise credentials_exception
 
+        # Check if token is in blocklist
         if await token_in_blacklist(payload.jti):
             raise credentials_exception
 
@@ -103,14 +106,14 @@ async def verify_access_token(token: str, credentials_exception):
     return token_data
 
 
-def get_refresh_token_details(token: str = Depends(oauth2_scheme)):
+async def get_refresh_token_details(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="provide a refresh token",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = verify_refresh_token(token, credentials_exception)
+        payload = await verify_refresh_token(token, credentials_exception)
     except JWTError:
         raise credentials_exception
 

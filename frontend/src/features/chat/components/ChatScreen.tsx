@@ -25,13 +25,6 @@ export default function ChatScreen() {
   const wsService = WebSocketService.getInstance();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      console.log("not auth");
-      logout();
-    }
-  }, []);
-
-  useEffect(() => {
     const removeHandler = addMessageHandler((msg) => {
       const incoming = msg;
       // Check if message ID already exists in state
@@ -39,7 +32,6 @@ export default function ChatScreen() {
         if (!incoming || !incoming.sender_id) return prev;
         const exists = prev.some((m) => m.id === incoming.id);
         if (exists) return prev;
-        console.log("USERRR", selectedUser);
 
         const isRelevant =
           (incoming.sender_id === selectedUser?.id &&
@@ -61,50 +53,66 @@ export default function ChatScreen() {
     });
 
     return () => removeHandler();
-  }, [selectedChatId, currentUser?.id, addMessageHandler]);
+  }, [selectedChatId, currentUser?.id, selectedUser?.id, addMessageHandler]);
 
   useEffect(() => {
     async function fetchMessages() {
-      if (selectedChatId) {
-        const chatMessages = await getChatMessages(selectedChatId);
-        setMessages(chatMessages);
-        setMessages((_) => {
-          return chatMessages.map((msg) => ({
-            ...msg,
-            isOwn: msg.sender_id === currentUser?.id,
-          }));
-        });
+      if (selectedChatId && selectedUser) {
+        try {
+          const chatMessages = await getChatMessages(selectedChatId);
+          setMessages(
+            chatMessages.map((msg) => ({
+              ...msg,
+              isOwn: msg.sender_id === currentUser?.id,
+            }))
+          );
+        } catch (error) {
+          console.error("Failed to fetch messages:", error);
+          setMessages([]);
+        }
       }
     }
     fetchMessages();
-  }, [selectedChatId]);
+  }, [selectedChatId, selectedUser, currentUser?.id, getChatMessages]);
 
   const handleAvatarClick = () => {
     console.log("Current User:", currentUser);
   };
 
   const handleSend = (text: string) => {
+    if (!currentUser || !selectedUser) {
+      console.error("No current user or selected user");
+      return;
+    }
+
     const messageData: Message = {
-      chat_id: generateChatId(currentUser!.id, selectedUser!.id),
-      sender_id: currentUser!.id,
-      receiver_id: selectedUser!.id,
+      chat_id: generateChatId(currentUser.id, selectedUser.id),
+      sender_id: currentUser.id,
+      receiver_id: selectedUser.id,
       content: text,
       timestamp: new Date().toISOString(),
       isOwn: true,
     };
+
     if (!wsService.isReady()) {
       console.warn("WebSocket not connected yet. Message queued.");
       return;
     }
 
-    console.log(selectedChatId);
-    console.log(currentUser);
+    console.log("Sending message:", messageData);
     sendMessage(messageData);
+    
+    // // Add message to local state immediately for better UX
+    // setMessages((prev) => [...prev, messageData]);
   };
 
-  // if (isLoading || !currentUser) {
-  //   return <div className="p-4">Loading chat...</div>;
-  // }
+  if (!currentUser) {
+    return (
+      <div className="h-screen w-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-xl">Loading user data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen bg-gray-200 flex justify-center">
@@ -127,18 +135,18 @@ export default function ChatScreen() {
         <ChatList
           friendList={friendList}
           selectedChatId={selectedChatId}
-          onSelectChat={(recieverId) => {
-            const chatId = generateChatId(currentUser!.id, recieverId);
+          onSelectChat={(receiverId) => {
+            const chatId = generateChatId(currentUser.id, receiverId);
             setSelectedChatId(chatId);
-            const user = friendList.find((u) => u.id === recieverId) || null;
+            const user = friendList.find((u) => u.id === receiverId) || null;
             setSelectedUser(user);
           }}
         />
 
         <div className="flex flex-col flex-1">
-          <ChatHeader user={selectedUser!!} />
+          {selectedUser && <ChatHeader user={selectedUser} />}
           <ChatMessages messages={messages} />
-          {selectedChatId && <ChatInput onSend={handleSend} />}
+          {selectedUser && <ChatInput onSend={handleSend} />}
         </div>
       </div>
     </div>

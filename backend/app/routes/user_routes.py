@@ -26,5 +26,4 @@ async def get_current_user_details(token: TokenData = Depends(get_access_token_d
 async def get_friends_list(token: TokenData = Depends(get_access_token_details)):
     friends_list = await user_collection.find({"_id": {"$ne": ObjectId(token.user_id)}}).to_list()
     friends_list = [user_serializer(friend) for friend in friends_list]
-    print(friends_list)
     return friends_list

@@ -18,13 +18,22 @@ token_blocklist = Redis(
 
 
 async def add_jti_to_blocklist(jti: str):
-    await token_blocklist.set(
-        name=jti,
-        value="",
-        ex=JTI_EXPIRY
-    )
+    try:
+        result = await token_blocklist.set(
+            name=jti,
+            value="blocked",
+            ex=JTI_EXPIRY
+        )
+        return result
+    except Exception as e:
+        print(f"Error adding JTI to blocklist: {e}")
+        raise e
 
 
 async def token_in_blacklist(jti: str) -> bool:
-    _jti = await token_blocklist.get(jti)
-    return _jti is not None
+    try:
+        _jti = await token_blocklist.get(jti)
+        return _jti is not None
+    except Exception as e:
+        print(f"Error checking JTI in blocklist: {e}")
+        return False

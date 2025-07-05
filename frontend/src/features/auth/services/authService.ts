@@ -8,7 +8,7 @@ export const login = async (
   const formData = new FormData();
   formData.append("username", email);
   formData.append("password", password);
-  const response = await api.post("/login", formData, {
+  const response = await api.post("/auth/login", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -19,7 +19,7 @@ export const login = async (
 
 export const signup = (email: string, username: string, password: string) => {
   try {
-    const response = api.post("/register", {
+    const response = api.post("/auth/register", {
       email,
       username,
       password,
@@ -30,14 +30,19 @@ export const signup = (email: string, username: string, password: string) => {
   }
 };
 
-export const logout = (token: string | null) => {
+export const refreshToken = async () => {
   try {
-    if (!token) return;
-    const response = api.post("/logout", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    // Refresh token is automatically sent via HTTP-only cookie
+    const response = await api.post("/auth/refresh_token");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const logout = async () => {
+  try {
+    const response = await api.post("/auth/logout");
     return response;
   } catch (error) {
     throw error;

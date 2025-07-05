@@ -20,7 +20,7 @@ export default function ChatScreen() {
   const { currentUser, friendList, generateChatId, getChatMessages } =
     useChat();
   const { sendMessage, addMessageHandler } = useWebSocket();
-  const { logout, isAuthenticated } = useAuth();
+  const { logout } = useAuth();
 
   const wsService = WebSocketService.getInstance();
 
@@ -101,7 +101,7 @@ export default function ChatScreen() {
 
     console.log("Sending message:", messageData);
     sendMessage(messageData);
-    
+
     // // Add message to local state immediately for better UX
     // setMessages((prev) => [...prev, messageData]);
   };

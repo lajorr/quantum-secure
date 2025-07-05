@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from ..config.database import user_collection
-from ..model.user import Token, TokenData, UserCreate,  UserBase
-from ..utils.auth import get_access_token_details, get_refresh_token_details, hashed_password, verify_password, create_token
+from ..config.database import add_jti_to_blocklist, user_collection
+from ..model.user import Token,  UserCreate,  UserBase
+from ..utils.auth import get_refresh_token_details, hashed_password, verify_password, create_token
 from ..schema.schema import user_serializer
 from datetime import timedelta, datetime, timezone
-from ..config.redis import add_jti_to_blocklist
 router = APIRouter(
     prefix='/auth',
     tags=['Auth'])

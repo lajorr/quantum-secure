@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 import os
 import uuid
 import logging
-from ..config.redis import token_in_blacklist
+
+from ..config.database import token_in_blacklist
 
 from ..model.user import TokenData
 

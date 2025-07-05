@@ -1,21 +1,24 @@
-import LogoutIcon from "@mui/icons-material/Logout";
-import { Avatar } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useWebSocket } from "../../../shared/hooks/useWebSocket";
-import { WebSocketService } from "../../../shared/services/websocket.service";
-import type { User } from "../../../shared/types/User";
-import { useAuth } from "../../auth/context/AuthContext";
-import { useChat } from "../context/ChatContext"; // adjust path if needed
-import type { Message } from "../types/chat";
-import ChatHeader from "./ChatHeader";
-import ChatInput from "./ChatInput";
-import ChatList from "./ChatList";
-import ChatMessages from "./ChatMessages";
+import LogoutIcon from '@mui/icons-material/Logout'
+import { Avatar } from '@mui/material'
+import { useEffect, useState } from 'react'
+import { useWebSocket } from '../../../shared/hooks/useWebSocket'
+import { WebSocketService } from '../../../shared/services/websocket.service'
+import type { User } from '../../../shared/types/User'
+import { useAuth } from '../../auth/context/AuthContext'
+import { useChat } from '../context/ChatContext' // adjust path if needed
+import type { Message } from '../types/chat'
+import ChatHeader from './ChatHeader'
+import ChatInput from './ChatInput'
+import ChatList from './ChatList'
+import ChatMessages from './ChatMessages'
+import { AES } from '../aes_implement/aes'
+import { encryptCBC } from '../aes_implement/cbc'
+import { Buffer } from 'buffer'
 
 export default function ChatScreen() {
-  const [selectedChatId, setSelectedChatId] = useState<string>("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>();
+  const [selectedChatId, setSelectedChatId] = useState<string>('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   const { currentUser, friendList, generateChatId, getChatMessages } =
     useChat();
@@ -26,7 +29,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     const removeHandler = addMessageHandler((msg) => {
-      const incoming = msg;
+      const incoming = msg
       // Check if message ID already exists in state
       setMessages((prev) => {
         if (!incoming || !incoming.sender_id) return prev;
@@ -37,9 +40,9 @@ export default function ChatScreen() {
           (incoming.sender_id === selectedUser?.id &&
             incoming.receiver_id === currentUser?.id) ||
           (incoming.sender_id === currentUser?.id &&
-            incoming.receiver_id === selectedUser?.id);
+            incoming.receiver_id === selectedUser?.id)
 
-        if (!isRelevant) return prev;
+        if (!isRelevant) return prev
 
         return [
           ...prev,
@@ -48,9 +51,9 @@ export default function ChatScreen() {
             id: incoming.id,
             isOwn: incoming.sender_id === currentUser?.id,
           },
-        ];
-      });
-    });
+        ]
+      })
+    })
 
     return () => removeHandler();
   }, [selectedChatId, currentUser?.id, selectedUser?.id, addMessageHandler]);
@@ -76,8 +79,11 @@ export default function ChatScreen() {
   }, [selectedChatId, selectedUser, currentUser?.id, getChatMessages]);
 
   const handleAvatarClick = () => {
-    console.log("Current User:", currentUser);
-  };
+    console.log('Current User:', currentUser)
+  }
+
+  const key = BigInt('0x2b7e151628aed2a6abf7158809cf4f3c')
+  const aes = new AES(key)
 
   const handleSend = (text: string) => {
     if (!currentUser || !selectedUser) {
@@ -85,26 +91,35 @@ export default function ChatScreen() {
       return;
     }
 
+    // Convert user input to Buffer
+    const messageBuffer = Buffer.from(text, 'utf8')
+
+    // Generate new random IV per message
+    const iv = new Uint8Array(16)
+    crypto.getRandomValues(iv)
+
+    // Encrypt user input with AES CBC mode and Encode combined buffer as Base64 string
+    const ciphertext = encryptCBC(aes, messageBuffer, iv)
+
+    const encryptedBase64 = Buffer.from(ciphertext).toString('base64')
+
+    // Construct message object with encrypted content
     const messageData: Message = {
-      chat_id: generateChatId(currentUser.id, selectedUser.id),
-      sender_id: currentUser.id,
-      receiver_id: selectedUser.id,
-      content: text,
+      chat_id: generateChatId(currentUser!.id, selectedUser!.id),
+      sender_id: currentUser!.id,
+      receiver_id: selectedUser!.id,
+      content: encryptedBase64, // send encrypted Base64 string here
       timestamp: new Date().toISOString(),
       isOwn: true,
     };
 
     if (!wsService.isReady()) {
-      console.warn("WebSocket not connected yet. Message queued.");
-      return;
+      console.warn('WebSocket not connected yet. Message queued.')
+      return
     }
-
-    console.log("Sending message:", messageData);
-    sendMessage(messageData);
-
-    // // Add message to local state immediately for better UX
-    // setMessages((prev) => [...prev, messageData]);
-  };
+  
+    sendMessage(messageData)
+  }
 
   if (!currentUser) {
     return (
@@ -119,9 +134,9 @@ export default function ChatScreen() {
       <div className="flex h-full w-full max-w-[1440px]">
         <div className="w-min bg-gray-800 text-white p-2 flex flex-col gap-4 items-center justify-end">
           <LogoutIcon
-            sx={{ cursor: "pointer" }}
+            sx={{ cursor: 'pointer' }}
             onClick={() => {
-              logout();
+              logout()
             }}
           />
           <div className=" cursor-pointer" onClick={handleAvatarClick}>
@@ -135,11 +150,11 @@ export default function ChatScreen() {
         <ChatList
           friendList={friendList}
           selectedChatId={selectedChatId}
-          onSelectChat={(receiverId) => {
-            const chatId = generateChatId(currentUser.id, receiverId);
-            setSelectedChatId(chatId);
-            const user = friendList.find((u) => u.id === receiverId) || null;
-            setSelectedUser(user);
+          onSelectChat={(recieverId) => {
+            const chatId = generateChatId(currentUser!.id, recieverId)
+            setSelectedChatId(chatId)
+            const user = friendList.find((u) => u.id === recieverId) || null
+            setSelectedUser(user)
           }}
         />
 
@@ -150,5 +165,5 @@ export default function ChatScreen() {
         </div>
       </div>
     </div>
-  );
+  )
 }

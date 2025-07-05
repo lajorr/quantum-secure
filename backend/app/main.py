@@ -1,5 +1,4 @@
-from fastapi import FastAPI, WebSocket
-from .controller import websocket_controller
+from fastapi import FastAPI
 from .routes import auth_routes, user_routes, websocket_routes
 from fastapi.middleware.cors import CORSMiddleware
 

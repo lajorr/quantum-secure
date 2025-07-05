@@ -29,3 +29,17 @@ export const signup = (email: string, username: string, password: string) => {
     throw error;
   }
 };
+
+export const logout = (token: string | null) => {
+  try {
+    if (!token) return;
+    const response = api.post("/logout", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

@@ -13,6 +13,8 @@ type ChatContextType = {
   friendList: User[];
   currentUser: User | null;
   getUserData: () => Promise<void>;
+  selectedUser: User | null;
+  setSelectedUser: (user: User | null) => void;
   generateChatId: (senderId: string, receiverId: string) => string;
   getChatMessages: (chatId: string) => Promise<Message[]>;
 };
@@ -22,6 +24,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [friendList, setFriendsList] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { isAuthenticated } = useAuth();
 
@@ -82,6 +85,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         generateChatId,
         getChatMessages,
+        selectedUser,
+        setSelectedUser,
       }}
     >
       {children}

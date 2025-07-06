@@ -1,7 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends, Request, Response, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, HTTPException,  Request, Response, status
 from ..config.database import add_jti_to_blocklist, user_collection
-from ..model.user import Token,  UserCreate,  UserBase
+from ..model.user import Token,  UserCreate,  UserResponse, UserRequest
 from ..utils.auth import get_refresh_token_details, hashed_password, verify_password, create_token
 from ..schema.schema import user_serializer
 from datetime import timedelta, datetime, timezone
@@ -11,7 +10,7 @@ router = APIRouter(
 
 
 # Register Route
-@router.post("/register", response_model=UserBase)
+@router.post("/register", response_model=UserResponse)
 async def register(user: UserCreate):
     if await user_collection.find_one({"email": user.email}):
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -27,8 +26,9 @@ async def register(user: UserCreate):
 
 
 @router.post("/login", response_model=Token)
-async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await user_collection.find_one({"email": form_data.username})
+async def login(response: Response, form_data: UserRequest):
+    print(form_data)
+    user = await user_collection.find_one({"email": form_data.email})
     if not user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
 

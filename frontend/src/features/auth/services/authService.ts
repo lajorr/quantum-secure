@@ -5,28 +5,28 @@ export const login = async (
   email: string,
   password: string
 ): Promise<LoginResponse> => {
-  const formData = new FormData();
-  formData.append("username", email);
-  formData.append("password", password);
-  const response = await api.post("/auth/login", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+  const response = await api.post("/auth/login", {
+    email,
+    password,
   });
 
   return response.data;
 };
 
-export const signup = (email: string, username: string, password: string) => {
+export const signup = async (
+  email: string,
+  username: string,
+  password: string
+) => {
   try {
-    const response = api.post("/auth/register", {
+    console.log("email", email, "username", username, "password", password);
+    const response = await api.post("/auth/register", {
       email,
       username,
       password,
     });
     return response;
   } catch (error) {
-    console.log(error)
     throw error;
   }
 };

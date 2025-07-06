@@ -1,15 +1,38 @@
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import type { User } from "../../../shared/types/User";
-import { clearAccessToken, getAccessToken, removeTokenUpdateCallback, setAccessToken, setTokenUpdateCallback } from "../../../shared/utils/tokenManager";
+import {
+  clearAccessToken,
+  getAccessToken,
+  removeTokenUpdateCallback,
+  setAccessToken,
+  setTokenUpdateCallback,
+} from "../../../shared/utils/tokenManager";
+import { axiosErrorHandler } from "../../../utils/axios_error_handler";
 import { getUserDetails } from "../../chat/services/chatServices";
-import { login as apiLogin, logout as apiLogout, signup as register } from "../services/authService";
+import {
+  login as apiLogin,
+  logout as apiLogout,
+  signup as register,
+} from "../services/authService";
 import type { LoginResponse } from "../types/login_response";
 
 type AuthContextType = {
   user: User | null;
   hasError: boolean;
-  signup: (username: string, email: string, password: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  errorMessage: string;
+  signup: (
+    username: string,
+    email: string,
+    password: string
+  ) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   isAuthenticated: boolean;
   checkToken: () => Promise<void>;
   authLoading: boolean;
@@ -21,6 +44,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [hasError, setHasError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -60,33 +84,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (username: string, email: string, password: string) => {
     try {
+      setErrorMessage("");
       await register(email, username, password);
-      setHasError(false);
+      return true;
     } catch (error) {
-      setHasError(true);
-      throw error;
+      if (error instanceof AxiosError) {
+        const errorMessage = axiosErrorHandler(error);
+        console.log(errorMessage);
+        setErrorMessage(errorMessage);
+      } else {
+        console.error("Unexpected error:", error);
+        setErrorMessage(errorMessage);
+      }
+      return false;
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
+      setErrorMessage("");
       setAuthLoading(true);
       const response: LoginResponse = await apiLogin(email, password);
-      
+
       // Store access token using token manager (will update state via callback)
       setAccessToken(response.access_token);
-      
+
       setIsAuthenticated(true);
       setHasError(false);
-      
+
       // Fetch user data after successful login
       await getUserData();
+
+      return true;
     } catch (error) {
       console.error("Login failed:", error);
       setHasError(true);
       setIsAuthenticated(false);
       setAuthLoading(false);
-      throw error;
+      if (error instanceof AxiosError) {
+        const errorMessage = axiosErrorHandler(error);
+        setErrorMessage(errorMessage);
+      }
+      return false;
     } finally {
       setAuthLoading(false);
     }
@@ -99,12 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(false);
       setUser(null);
       setHasError(false);
-      
-      // Make the logout API call (but don't wait for it to complete)
-      apiLogout().catch((error) => {
-        console.error("Logout API call failed:", error);
-        // Don't throw the error - logout should succeed even if API fails
-      });
+      apiLogout();
     } catch (error) {
       console.error("Logout process failed:", error);
       // Ensure state is cleared even if there's an error
@@ -180,6 +214,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         checkToken,
         authLoading,
         accessToken,
+        errorMessage,
       }}
     >
       {children}

@@ -1,27 +1,33 @@
-import LogoutIcon from '@mui/icons-material/Logout'
-import { Avatar } from '@mui/material'
-import { useEffect, useState } from 'react'
-import { useWebSocket } from '../../../shared/hooks/useWebSocket'
-import { WebSocketService } from '../../../shared/services/websocket.service'
-import type { User } from '../../../shared/types/User'
-import { useAuth } from '../../auth/context/AuthContext'
-import { useChat } from '../context/ChatContext' // adjust path if needed
-import type { Message } from '../types/chat'
-import ChatHeader from './ChatHeader'
-import ChatInput from './ChatInput'
-import ChatList from './ChatList'
-import ChatMessages from './ChatMessages'
-import { AES } from '../aes_implement/aes'
-import { encryptCBC } from '../aes_implement/cbc'
-import { Buffer } from 'buffer'
+import LogoutIcon from "@mui/icons-material/Logout";
+import { Buffer } from "buffer";
+import { useEffect, useState } from "react";
+import { useWebSocket } from "../../../shared/hooks/useWebSocket";
+import { WebSocketService } from "../../../shared/services/websocket.service";
+import { getInitials } from "../../../utils/string_utils";
+import { useAuth } from "../../auth/context/AuthContext";
+import { AES } from "../aes_implement/aes";
+import { encryptCBC } from "../aes_implement/cbc";
+import { useChat } from "../context/ChatContext"; // adjust path if needed
+import type { Message } from "../types/chat";
+import ChatHeader from "./ChatHeader";
+import ChatInput from "./ChatInput";
+import ChatList from "./ChatList";
+import ChatMessages from "./ChatMessages";
+
+import qs from "../../../assets/qs.jpg";
 
 export default function ChatScreen() {
-  const [selectedChatId, setSelectedChatId] = useState<string>('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedChatId, setSelectedChatId] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  const { currentUser, friendList, generateChatId, getChatMessages } =
-    useChat();
+  const {
+    currentUser,
+    friendList,
+    generateChatId,
+    getChatMessages,
+    selectedUser,
+    setSelectedUser,
+  } = useChat();
   const { sendMessage, addMessageHandler } = useWebSocket();
   const { logout } = useAuth();
 
@@ -29,7 +35,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     const removeHandler = addMessageHandler((msg) => {
-      const incoming = msg
+      const incoming = msg;
       // Check if message ID already exists in state
       setMessages((prev) => {
         if (!incoming || !incoming.sender_id) return prev;
@@ -40,9 +46,9 @@ export default function ChatScreen() {
           (incoming.sender_id === selectedUser?.id &&
             incoming.receiver_id === currentUser?.id) ||
           (incoming.sender_id === currentUser?.id &&
-            incoming.receiver_id === selectedUser?.id)
+            incoming.receiver_id === selectedUser?.id);
 
-        if (!isRelevant) return prev
+        if (!isRelevant) return prev;
 
         return [
           ...prev,
@@ -51,9 +57,9 @@ export default function ChatScreen() {
             id: incoming.id,
             isOwn: incoming.sender_id === currentUser?.id,
           },
-        ]
-      })
-    })
+        ];
+      });
+    });
 
     return () => removeHandler();
   }, [selectedChatId, currentUser?.id, selectedUser?.id, addMessageHandler]);
@@ -79,11 +85,11 @@ export default function ChatScreen() {
   }, [selectedChatId, selectedUser, currentUser?.id, getChatMessages]);
 
   const handleAvatarClick = () => {
-    console.log('Current User:', currentUser)
-  }
+    console.log("Current User:", currentUser);
+  };
 
-  const key = BigInt('0x2b7e151628aed2a6abf7158809cf4f3c')
-  const aes = new AES(key)
+  const key = BigInt("0x2b7e151628aed2a6abf7158809cf4f3c");
+  const aes = new AES(key);
 
   const handleSend = (text: string) => {
     if (!currentUser || !selectedUser) {
@@ -92,16 +98,16 @@ export default function ChatScreen() {
     }
 
     // Convert user input to Buffer
-    const messageBuffer = Buffer.from(text, 'utf8')
+    const messageBuffer = Buffer.from(text, "utf8");
 
     // Generate new random IV per message
-    const iv = new Uint8Array(16)
-    crypto.getRandomValues(iv)
+    const iv = new Uint8Array(16);
+    crypto.getRandomValues(iv);
 
     // Encrypt user input with AES CBC mode and Encode combined buffer as Base64 string
-    const ciphertext = encryptCBC(aes, messageBuffer, iv)
+    const ciphertext = encryptCBC(aes, messageBuffer, iv);
 
-    const encryptedBase64 = Buffer.from(ciphertext).toString('base64')
+    const encryptedBase64 = Buffer.from(ciphertext).toString("base64");
 
     // Construct message object with encrypted content
     const messageData: Message = {
@@ -114,12 +120,17 @@ export default function ChatScreen() {
     };
 
     if (!wsService.isReady()) {
-      console.warn('WebSocket not connected yet. Message queued.')
-      return
+      console.warn("WebSocket not connected yet. Message queued.");
+      return;
     }
-  
-    sendMessage(messageData)
-  }
+
+    sendMessage(messageData);
+  };
+
+  const handleLogout = async () => {
+    logout();
+    window.location.href = "/";
+  };
 
   if (!currentUser) {
     return (
@@ -133,37 +144,42 @@ export default function ChatScreen() {
     <div className="h-screen w-screen bg-gray-200 flex justify-center">
       <div className="flex h-full w-full max-w-[1440px]">
         <div className="w-min bg-gray-800 text-white p-2 flex flex-col gap-4 items-center justify-end">
-          <LogoutIcon
-            sx={{ cursor: 'pointer' }}
-            onClick={() => {
-              logout()
-            }}
-          />
-          <div className=" cursor-pointer" onClick={handleAvatarClick}>
-            <Avatar
-              sx={{ width: 40, height: 40 }}
-              src="https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png"
-              alt={currentUser?.username}
-            />
+          <LogoutIcon sx={{ cursor: "pointer" }} onClick={handleLogout} />
+          <div
+            className="cursor-pointer rounded-full size-10 flex justify-center items-center border-2 border-white font-bold"
+            onClick={handleAvatarClick}
+          >
+            <h2>{getInitials(currentUser.username)}</h2>
           </div>
         </div>
         <ChatList
           friendList={friendList}
           selectedChatId={selectedChatId}
           onSelectChat={(recieverId) => {
-            const chatId = generateChatId(currentUser!.id, recieverId)
-            setSelectedChatId(chatId)
-            const user = friendList.find((u) => u.id === recieverId) || null
-            setSelectedUser(user)
+            const chatId = generateChatId(currentUser!.id, recieverId);
+            setSelectedChatId(chatId);
+            const user = friendList.find((u) => u.id === recieverId) || null;
+            setSelectedUser(user);
           }}
         />
-
-        <div className="flex flex-col flex-1">
-          {selectedUser && <ChatHeader user={selectedUser} />}
-          <ChatMessages messages={messages} />
-          {selectedUser && <ChatInput onSend={handleSend} />}
-        </div>
+        {!selectedUser && (
+          <div className="h-full w-full flex items-center justify-center bg-white">
+            <div className="relative">
+              <img className="h-120" src={qs} alt="LOGO" />
+              <div className="absolute bottom-[180px] flex justify-center w-full">
+                <h2 className=" w-max text-lg">A Secure Chat Application</h2>
+              </div>
+            </div>
+          </div>
+        )}
+        {selectedUser && (
+          <div className="flex flex-col w-full">
+            <ChatHeader user={selectedUser} />
+            <ChatMessages messages={messages} />
+            <ChatInput onSend={handleSend} />
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }

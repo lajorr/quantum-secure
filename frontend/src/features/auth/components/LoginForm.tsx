@@ -2,6 +2,7 @@ import { CircularProgress } from "@mui/material";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginForm() {
@@ -11,28 +12,25 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   const authContext = useAuth();
-  const hasError = authContext.hasError;
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await authContext.login(email, password);
+    const isSuccess = await authContext.login(email, password);
+    if (isSuccess) {
+      toast.success("Logged in successfully");
       navigate("/");
-    } catch (error) {}
+    } else {
+      setIsLoading(false);
+      return false;
+    }
     setIsLoading(false);
-    // if (result.success && result.user) {
-    //   setUser(result.user);
-    //   navigate("/");
-    // } else {
-    //   alert(result.message);
-    // }
   };
 
   useEffect(() => {
-    if (hasError) {
-      alert("Login failed");
+    if (authContext.errorMessage) {
+      toast.error(authContext.errorMessage);
     }
-  }, [hasError]);
+  }, [authContext.errorMessage]);
 
   return (
     <div className="h-screen w-screen bg-gray-200 flex items-center justify-center">

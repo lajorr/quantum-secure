@@ -3,30 +3,34 @@ import { LoginForm, SignupForm } from "./features/auth";
 import { AuthProvider } from "./features/auth/context/AuthContext";
 import { ChatProvider } from "./features/chat/context/ChatContext";
 // import { WebSocketDemo } from "./features/websocket/WebSocketDemo";
-import { ProtectedRoute } from "./layouts/protectedRoute";
+import { ToastContainer } from "react-toastify";
 import { ChatScreen } from "./features/chat";
+import { ProtectedRoute } from "./layouts/protectedRoute";
 
 function App() {
   return (
-    <AuthProvider>
-      <ChatProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                // <WebSocketDemo />
-                <ProtectedRoute>
-                  <ChatScreen />
-                 </ProtectedRoute>
-              }
-            />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/signup" element={<SignupForm />} />
-          </Routes>
-        </BrowserRouter>
-      </ChatProvider>
-    </AuthProvider>
+    <div>
+      <ToastContainer autoClose={3000} />
+      <AuthProvider>
+        <ChatProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  // <WebSocketDemo />
+                  <ProtectedRoute>
+                    <ChatScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/signup" element={<SignupForm />} />
+            </Routes>
+          </BrowserRouter>
+        </ChatProvider>
+      </AuthProvider>
+    </div>
   );
 }
 

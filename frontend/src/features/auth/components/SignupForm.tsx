@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
 export default function SignupForm() {
@@ -8,17 +9,37 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [hasPasswordError, setHasPasswordError] = useState<boolean>(false);
 
   const authContext = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (confirmPassword !== password) {
+      setHasPasswordError(true);
+    } else {
+      setHasPasswordError(false);
+    }
+  }, [confirmPassword]);
+
+  useEffect(() => {
+    if (authContext.errorMessage) {
+      toast.error(authContext.errorMessage);
+    }
+  }, [authContext.errorMessage]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password === confirmPassword) {
-      await authContext.signup(name, email, password);
-      navigate("/login");
+      const isSuccess = await authContext.signup(name, email, password);
+      if (isSuccess) {
+        toast.success("Account created successfully");
+        navigate("/login");
+      } else {
+        return false;
+      }
     } else {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
     }
   };
 
@@ -89,10 +110,14 @@ export default function SignupForm() {
               type="password"
               id="confirmPassword"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              style={hasPasswordError ? { borderColor: "red" } : {}}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
+            <p className="text-red-500 text-sm">
+              {hasPasswordError && "Passwords do not match"}
+            </p>
           </div>
           <button
             type="submit"

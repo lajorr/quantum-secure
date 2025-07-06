@@ -1,6 +1,6 @@
 import { Sbox } from './Sbox'
 import { Rcon } from './Rcon'
-import { xtime } from './Xtime'
+import { xtime } from './xtime'
 import { text2matrix, matrix2text } from './matrixUtils'
 
 export class AES {

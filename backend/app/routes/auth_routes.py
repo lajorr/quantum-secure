@@ -37,8 +37,8 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
 
     access_token = create_token(
         {"user_id": str(user["_id"])})
-    # refresh_token = create_token(
-    #     {"user_id": str(user["_id"])}, refresh=True, expiry=timedelta(days=2))
+    refresh_token = create_token(
+        {"user_id": str(user["_id"])}, refresh=True, expiry=timedelta(days=2))
 
     response.set_cookie(
         key="refresh_token",

@@ -26,6 +26,7 @@ export const signup = (email: string, username: string, password: string) => {
     });
     return response;
   } catch (error) {
+    console.log(error)
     throw error;
   }
 };

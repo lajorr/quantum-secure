@@ -27,10 +27,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       )}
       <div
         className={`max-w-xs md:max-w-md lg:max-w-lg ${
-          isOwn ? "bg-blue-100 text-right" : "bg-gray-100"
+          isOwn ? "bg-[#4988e7] text-right text-white" : "bg-gray-100"
         } rounded-lg px-4 py-2 shadow-sm relative`}
       >
-        <div className="text-sm text-gray-900 whitespace-pre-line">
+        <div className="text-sm whitespace-pre-line">
           {message.content}
         </div>
         {message.imageUrl && (
@@ -40,10 +40,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             className="mt-2 rounded-lg max-h-48 object-cover"
           />
         )}
-        <div className="text-xs text-gray-400 mt-1 flex items-center justify-end gap-1">
-          {message.read && isOwn && <span>✔✔</span>}
-          <span>{formatted}</span>
-        </div>
+      </div>
+      <div className="text-xs text-gray-400 mt-1 flex items-center justify-end gap-1">
+        {message.read && isOwn && <span>✔✔</span>}
+        <span>{formatted}</span>
       </div>
     </div>
   );

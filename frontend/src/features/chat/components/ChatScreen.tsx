@@ -143,13 +143,16 @@ export default function ChatScreen() {
   return (
     <div className="h-screen w-screen bg-gray-200 flex justify-center">
       <div className="flex h-full w-full max-w-[1440px]">
-        <div className="w-min bg-gray-800 text-white p-2 flex flex-col gap-4 items-center justify-end">
-          <LogoutIcon sx={{ cursor: "pointer" }} onClick={handleLogout} />
+        <div className="w-min bg-gray-800 border-r text-gray-500 p-2 flex flex-col gap-4 items-center justify-end">
+          <LogoutIcon
+            sx={{ cursor: "pointer", color: "white" }}
+            onClick={handleLogout}
+          />
           <div
             className="cursor-pointer rounded-full size-10 flex justify-center items-center border-2 border-white font-bold"
             onClick={handleAvatarClick}
           >
-            <h2>{getInitials(currentUser.username)}</h2>
+            <h2 className="text-white">{getInitials(currentUser.username)}</h2>
           </div>
         </div>
         <ChatList

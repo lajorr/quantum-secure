@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import LogoutIcon from '@mui/icons-material/Logout'
 import { Buffer } from 'buffer'
 import { useEffect, useMemo, useState } from 'react'
@@ -10,25 +9,6 @@ import { AES } from '../aes_implement/aes'
 import { encryptCBC } from '../aes_implement/cbc'
 import { useChat } from '../context/ChatContext' // adjust path if needed
 import { useRSA } from '../rsa_implement/RsaContext'
-=======
-import LogoutIcon from "@mui/icons-material/Logout";
-import { Buffer } from "buffer";
-import { useEffect, useState } from "react";
-import { useWebSocket } from "../../../shared/hooks/useWebSocket";
-import { WebSocketService } from "../../../shared/services/websocket.service";
-import { getInitials } from "../../../utils/string_utils";
-import { useAuth } from "../../auth/context/AuthContext";
-import { AES } from "../aes_implement/aes";
-import { encryptCBC } from "../aes_implement/cbc";
-import { useChat } from "../context/ChatContext"; // adjust path if needed
-import { useRSA } from "../rsa_implement/RsaContext";
-
-import type { Message } from "../types/chat";
-import ChatHeader from "./ChatHeader";
-import ChatInput from "./ChatInput";
-import ChatList from "./ChatList";
-import ChatMessages from "./ChatMessages";
->>>>>>> 68bb500 (static RSA implementation)
 
 import type { Message } from '../types/chat'
 import ChatHeader from './ChatHeader'
@@ -111,7 +91,7 @@ export default function ChatScreen() {
     console.log('Current User:', currentUser)
   }
 
-<<<<<<< HEAD
+
   //RSA encryption
   // 1. Define AES key as hex string
   const aesKeyHex = '2b7e151628aed2a6abf7158809cf4f3c'
@@ -128,24 +108,8 @@ export default function ChatScreen() {
     }
   }, [encrypt, aesKeyHex])
   const aes = new AES(aesKeyBigInt)
-=======
-  // 1. Define AES key as hex string
-  const aesKeyHex = '2b7e151628aed2a6abf7158809cf4f3c'
 
-  // 2. Encrypt using RSA (encrypt! expects hex string)
-  const encryptedChunks = encrypt!(aesKeyHex) // ✅ RSA encryption works
-
-  // 3. Base64 encode encrypted RSA output for sending
-  const encryptedAESKeyBase64 = Buffer.from(
-    encryptedChunks.map((chunk) => chunk.toString()).join(',')
-  ).toString('base64')
-
-  console.log("This is encrypted AES key base64:", encryptedAESKeyBase64)
-
-  // 4. Convert hex to BigInt for AES class
-  const aesKeyBigInt = BigInt('0x' + aesKeyHex)
-  const aes = new AES(aesKeyBigInt) // ✅ ready to encrypt/decrypt
->>>>>>> 68bb500 (static RSA implementation)
+  
 
   const handleSend = (text: string) => {
     if (!currentUser || !selectedUser) {

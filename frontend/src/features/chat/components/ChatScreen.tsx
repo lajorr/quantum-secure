@@ -1,22 +1,22 @@
-import LogoutIcon from "@mui/icons-material/Logout";
-import { Buffer } from "buffer";
-import { useEffect, useState } from "react";
-import { useWebSocket } from "../../../shared/hooks/useWebSocket";
-import { WebSocketService } from "../../../shared/services/websocket.service";
-import { getInitials } from "../../../utils/string_utils";
-import { useAuth } from "../../auth/context/AuthContext";
-import { AES } from "../aes_implement/aes";
-import { encryptCBC } from "../aes_implement/cbc";
-import { useChat } from "../context/ChatContext"; // adjust path if needed
-import { useRSA } from "../rsa_implement/RsaContext";
+import LogoutIcon from '@mui/icons-material/Logout'
+import { Buffer } from 'buffer'
+import { useEffect, useMemo, useState } from 'react'
+import { useWebSocket } from '../../../shared/hooks/useWebSocket'
+import { WebSocketService } from '../../../shared/services/websocket.service'
+import { getInitials } from '../../../utils/string_utils'
+import { useAuth } from '../../auth/context/AuthContext'
+import { AES } from '../aes_implement/aes'
+import { encryptCBC } from '../aes_implement/cbc'
+import { useChat } from '../context/ChatContext' // adjust path if needed
+import { useRSA } from '../rsa_implement/RsaContext'
 
-import type { Message } from "../types/chat";
-import ChatHeader from "./ChatHeader";
-import ChatInput from "./ChatInput";
-import ChatList from "./ChatList";
-import ChatMessages from "./ChatMessages";
+import type { Message } from '../types/chat'
+import ChatHeader from './ChatHeader'
+import ChatInput from './ChatInput'
+import ChatList from './ChatList'
+import ChatMessages from './ChatMessages'
 
-import qs from "../../../assets/qs.jpg";
+import qs from '../../../assets/qs.jpg'
 
 export default function ChatScreen() {
   const [selectedChatId, setSelectedChatId] = useState<string>('')
@@ -91,22 +91,22 @@ export default function ChatScreen() {
     console.log('Current User:', currentUser)
   }
 
+  //RSA encryption
   // 1. Define AES key as hex string
   const aesKeyHex = '2b7e151628aed2a6abf7158809cf4f3c'
-
-  // 2. Encrypt using RSA (encrypt! expects hex string)
-  const encryptedChunks = encrypt!(aesKeyHex) // ✅ RSA encryption works
-
-  // 3. Base64 encode encrypted RSA output for sending
-  const encryptedAESKeyBase64 = Buffer.from(
-    encryptedChunks.map((chunk) => chunk.toString()).join(',')
-  ).toString('base64')
-
-  console.log("This is encrypted AES key base64:", encryptedAESKeyBase64)
-
-  // 4. Convert hex to BigInt for AES class
-  const aesKeyBigInt = BigInt('0x' + aesKeyHex)
-  const aes = new AES(aesKeyBigInt) // ✅ ready to encrypt/decrypt
+  const { encryptedAESKeyBase64, aesKeyBigInt } = useMemo(() => {
+    const encryptedChunks = encrypt!(aesKeyHex) //Encrypt using RSA (encrypt! expects hex string)
+    //Base64 encode encrypted RSA output for sending
+    const base64 = Buffer.from(
+      encryptedChunks.map((chunk) => chunk.toString()).join(',')
+    ).toString('base64')
+    console.log("encrypted key", base64)
+    return {
+      encryptedAESKeyBase64: base64,
+      aesKeyBigInt: BigInt('0x' + aesKeyHex), //Convert hex to BigInt for AES class
+    }
+  }, [encrypt, aesKeyHex])
+  const aes = new AES(aesKeyBigInt)
 
   const handleSend = (text: string) => {
     if (!currentUser || !selectedUser) {
@@ -195,7 +195,10 @@ export default function ChatScreen() {
         {selectedUser && (
           <div className="flex flex-col w-full">
             <ChatHeader user={selectedUser} />
-            <ChatMessages messages={messages} />
+            <ChatMessages
+              messages={messages}
+              encryptedAESKeyBase64={encryptedAESKeyBase64}
+            />
             <ChatInput onSend={handleSend} />
           </div>
         )}

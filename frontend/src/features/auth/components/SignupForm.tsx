@@ -1,7 +1,8 @@
+import { CircularProgress } from "@mui/material";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
 export default function SignupForm() {
@@ -10,7 +11,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [hasPasswordError, setHasPasswordError] = useState<boolean>(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const authContext = useAuth();
   const navigate = useNavigate();
 
@@ -30,14 +31,17 @@ export default function SignupForm() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     if (password === confirmPassword) {
       const isSuccess = await authContext.signup(name, email, password);
       if (isSuccess) {
         toast.success("Account created successfully");
         navigate("/login");
       } else {
+        setIsLoading(false);
         return false;
       }
+      setIsLoading(false);
     } else {
       toast.error("Passwords do not match");
     }
@@ -122,8 +126,13 @@ export default function SignupForm() {
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition"
+            disabled={isLoading}
           >
-            Sign Up
+            {isLoading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Sign Up"
+            )}
           </button>
           <p className="mt-4 text-center">
             Already have an account?{" "}

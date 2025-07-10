@@ -8,6 +8,8 @@ import { useAuth } from "../../auth/context/AuthContext";
 import { AES } from "../aes_implement/aes";
 import { encryptCBC } from "../aes_implement/cbc";
 import { useChat } from "../context/ChatContext"; // adjust path if needed
+import { useRSA } from "../rsa_implement/RsaContext";
+
 import type { Message } from "../types/chat";
 import ChatHeader from "./ChatHeader";
 import ChatInput from "./ChatInput";
@@ -17,8 +19,9 @@ import ChatMessages from "./ChatMessages";
 import qs from "../../../assets/qs.jpg";
 
 export default function ChatScreen() {
-  const [selectedChatId, setSelectedChatId] = useState<string>("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedChatId, setSelectedChatId] = useState<string>('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const { encrypt } = useRSA()
 
   const {
     currentUser,
@@ -27,28 +30,28 @@ export default function ChatScreen() {
     getChatMessages,
     selectedUser,
     setSelectedUser,
-  } = useChat();
-  const { sendMessage, addMessageHandler } = useWebSocket();
-  const { logout } = useAuth();
+  } = useChat()
+  const { sendMessage, addMessageHandler } = useWebSocket()
+  const { logout } = useAuth()
 
-  const wsService = WebSocketService.getInstance();
+  const wsService = WebSocketService.getInstance()
 
   useEffect(() => {
     const removeHandler = addMessageHandler((msg) => {
-      const incoming = msg;
+      const incoming = msg
       // Check if message ID already exists in state
       setMessages((prev) => {
-        if (!incoming || !incoming.sender_id) return prev;
-        const exists = prev.some((m) => m.id === incoming.id);
-        if (exists) return prev;
+        if (!incoming || !incoming.sender_id) return prev
+        const exists = prev.some((m) => m.id === incoming.id)
+        if (exists) return prev
 
         const isRelevant =
           (incoming.sender_id === selectedUser?.id &&
             incoming.receiver_id === currentUser?.id) ||
           (incoming.sender_id === currentUser?.id &&
-            incoming.receiver_id === selectedUser?.id);
+            incoming.receiver_id === selectedUser?.id)
 
-        if (!isRelevant) return prev;
+        if (!isRelevant) return prev
 
         return [
           ...prev,
@@ -57,57 +60,71 @@ export default function ChatScreen() {
             id: incoming.id,
             isOwn: incoming.sender_id === currentUser?.id,
           },
-        ];
-      });
-    });
+        ]
+      })
+    })
 
-    return () => removeHandler();
-  }, [selectedChatId, currentUser?.id, selectedUser?.id, addMessageHandler]);
+    return () => removeHandler()
+  }, [selectedChatId, currentUser?.id, selectedUser?.id, addMessageHandler])
 
   useEffect(() => {
     async function fetchMessages() {
       if (selectedChatId && selectedUser) {
         try {
-          const chatMessages = await getChatMessages(selectedChatId);
+          const chatMessages = await getChatMessages(selectedChatId)
           setMessages(
             chatMessages.map((msg) => ({
               ...msg,
               isOwn: msg.sender_id === currentUser?.id,
             }))
-          );
+          )
         } catch (error) {
-          console.error("Failed to fetch messages:", error);
-          setMessages([]);
+          console.error('Failed to fetch messages:', error)
+          setMessages([])
         }
       }
     }
-    fetchMessages();
-  }, [selectedChatId, selectedUser, currentUser?.id, getChatMessages]);
+    fetchMessages()
+  }, [selectedChatId, selectedUser, currentUser?.id, getChatMessages])
 
   const handleAvatarClick = () => {
-    console.log("Current User:", currentUser);
-  };
+    console.log('Current User:', currentUser)
+  }
 
-  const key = BigInt("0x2b7e151628aed2a6abf7158809cf4f3c");
-  const aes = new AES(key);
+  // 1. Define AES key as hex string
+  const aesKeyHex = '2b7e151628aed2a6abf7158809cf4f3c'
+
+  // 2. Encrypt using RSA (encrypt! expects hex string)
+  const encryptedChunks = encrypt!(aesKeyHex) // ✅ RSA encryption works
+
+  // 3. Base64 encode encrypted RSA output for sending
+  const encryptedAESKeyBase64 = Buffer.from(
+    encryptedChunks.map((chunk) => chunk.toString()).join(',')
+  ).toString('base64')
+
+  console.log("This is encrypted AES key base64:", encryptedAESKeyBase64)
+
+  // 4. Convert hex to BigInt for AES class
+  const aesKeyBigInt = BigInt('0x' + aesKeyHex)
+  const aes = new AES(aesKeyBigInt) // ✅ ready to encrypt/decrypt
 
   const handleSend = (text: string) => {
     if (!currentUser || !selectedUser) {
-      console.error("No current user or selected user");
-      return;
+      console.error('No current user or selected user')
+      return
     }
 
     // Convert user input to Buffer
-    const messageBuffer = Buffer.from(text, "utf8");
+    const messageBuffer = Buffer.from(text, 'utf8')
 
     // Generate new random IV per message
-    const iv = new Uint8Array(16);
-    crypto.getRandomValues(iv);
+    const iv = new Uint8Array(16)
+    crypto.getRandomValues(iv)
 
     // Encrypt user input with AES CBC mode and Encode combined buffer as Base64 string
-    const ciphertext = encryptCBC(aes, messageBuffer, iv);
+    const ciphertext = encryptCBC(aes, messageBuffer, iv)
 
-    const encryptedBase64 = Buffer.from(ciphertext).toString("base64");
+    const encryptedBase64 = Buffer.from(ciphertext).toString('base64')
 
     // Construct message object with encrypted content
     const messageData: Message = {
@@ -117,27 +134,27 @@ export default function ChatScreen() {
       content: encryptedBase64, // send encrypted Base64 string here
       timestamp: new Date().toISOString(),
       isOwn: true,
-    };
-
-    if (!wsService.isReady()) {
-      console.warn("WebSocket not connected yet. Message queued.");
-      return;
     }
 
-    sendMessage(messageData);
-  };
+    if (!wsService.isReady()) {
+      console.warn('WebSocket not connected yet. Message queued.')
+      return
+    }
+
+    sendMessage(messageData)
+  }
 
   const handleLogout = async () => {
-    logout();
-    window.location.href = "/";
-  };
+    logout()
+    window.location.href = '/'
+  }
 
   if (!currentUser) {
     return (
       <div className="h-screen w-screen bg-gray-200 flex items-center justify-center">
         <div className="text-xl">Loading user data...</div>
       </div>
-    );
+    )
   }
 
   return (
@@ -159,10 +176,10 @@ export default function ChatScreen() {
           friendList={friendList}
           selectedChatId={selectedChatId}
           onSelectChat={(recieverId) => {
-            const chatId = generateChatId(currentUser!.id, recieverId);
-            setSelectedChatId(chatId);
-            const user = friendList.find((u) => u.id === recieverId) || null;
-            setSelectedUser(user);
+            const chatId = generateChatId(currentUser!.id, recieverId)
+            setSelectedChatId(chatId)
+            const user = friendList.find((u) => u.id === recieverId) || null
+            setSelectedUser(user)
           }}
         />
         {!selectedUser && (
@@ -184,5 +201,5 @@ export default function ChatScreen() {
         )}
       </div>
     </div>
-  );
+  )
 }

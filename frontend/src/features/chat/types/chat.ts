@@ -10,6 +10,10 @@ export type Message = {
   imageUrl?: string;
   isOwn?: boolean;
   read?: boolean;
+  enc: string;
+  enc_key: string;
+  rsa_pub_key: string;
+  rsa_mod: string;
 };
 
 export type ChatListItem = {

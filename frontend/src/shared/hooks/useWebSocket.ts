@@ -20,7 +20,6 @@ export const useWebSocket = () => {
   }, []);
 
   const sendMessage = useCallback((message: any) => {
-    console.log("sendMessage", message);
     wsService.sendMessage(message);
   }, []);
 

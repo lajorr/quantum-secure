@@ -32,12 +32,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
       const userData: User = await getUserDetails();
-      console.log("User Data:", userData);
       setCurrentUser(userData);
       await getUserFriends();
     } catch (error) {
       console.error("Failed to get user data:", error);
-      // Don't throw error, just log it
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +44,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const getUserFriends = async () => {
     try {
       const friendsList: User[] = await getUserFiendList();
-      console.log("Friends List:", friendsList);
       setFriendsList(friendsList || []);
     } catch (error) {
       console.error("Failed to get friends list:", error);

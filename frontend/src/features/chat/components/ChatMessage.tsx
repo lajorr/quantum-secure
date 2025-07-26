@@ -30,9 +30,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           isOwn ? "bg-[#4988e7] text-right text-white" : "bg-gray-100"
         } rounded-lg px-4 py-2 shadow-sm relative`}
       >
-        <div className="text-sm whitespace-pre-line">
-          {message.content}
-        </div>
+        <div className="text-sm whitespace-pre-line">{message.content}</div>
         {message.imageUrl && (
           <img
             src={message.imageUrl}

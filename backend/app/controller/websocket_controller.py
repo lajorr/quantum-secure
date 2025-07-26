@@ -61,7 +61,12 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
                     "receiver_id": message_data.get("receiver_id"),
                     "content": message_data.get("content"),
                     "timestamp": message_data.get("timestamp"),
-                    "chat_id": message_data.get("chat_id")
+                    "chat_id": message_data.get("chat_id"),
+                    "enc": message_data.get("enc"),
+                    "enc_key": message_data.get("enc"),
+                    "rsa_pub_key": message_data.get("rsa_pub_key"),
+                    "rsa_mod": message_data.get("rsa_mod"),
+
                 }
                 logger.info(f"Saving message to DB: {message_doc}")
                 message = await message_collection.insert_one(message_doc)
@@ -73,7 +78,10 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
                     "receiver_id": message_data.get("receiver_id"),
                     "content": message_data.get("content"),
                     "timestamp":  message_data.get("timestamp"),
-                    "chat_id": message_data.get("chat_id")
+                    "chat_id": message_data.get("chat_id"),  "enc": message_data.get("enc"),
+                    "enc_key": message_data.get("enc"),
+                    "rsa_pub_key": message_data.get("rsa_pub_key"),
+                    "rsa_mod": message_data.get("rsa_mod"),
                 }), client_id)
 
                 # Send to recipient if connected
@@ -85,7 +93,10 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
                         "receiver_id": message_data.get("receiver_id"),
                         "content": message_data.get("content"),
                         "timestamp":  message_data.get("timestamp"),
-                        "chat_id": message_data.get("chat_id")
+                        "chat_id": message_data.get("chat_id"),  "enc": message_data.get("enc"),
+                        "enc_key": message_data.get("enc"),
+                        "rsa_pub_key": message_data.get("rsa_pub_key"),
+                        "rsa_mod": message_data.get("rsa_mod"),
                     }), to_client)
 
             except json.JSONDecodeError:
@@ -98,5 +109,3 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
         logger.error(f"WebSocket error for client {client_id}: {str(e)}")
     finally:
         manager.disconnect(client_id)
-
-

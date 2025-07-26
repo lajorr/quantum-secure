@@ -27,7 +27,7 @@ async def register(user: UserCreate):
 
 @router.post("/login", response_model=Token)
 async def login(response: Response, form_data: UserRequest):
-    print(form_data)
+   
     user = await user_collection.find_one({"email": form_data.email})
     if not user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
@@ -44,10 +44,11 @@ async def login(response: Response, form_data: UserRequest):
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        # secure=True,# for production
-        samesite="strict",
+        secure=True,
+        samesite="none",
         expires=2 * 24 * 60 * 60,  # 2 days
         path="/"
+        
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -55,6 +56,7 @@ async def login(response: Response, form_data: UserRequest):
 @router.post("/refresh_token", response_model=Token)
 async def refreshToken(request: Request):
     refresh_token = request.cookies.get("refresh_token")
+    print("Refresh Token:", refresh_token)
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")

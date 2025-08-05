@@ -51,9 +51,9 @@ export class WebSocketService {
       console.log("WebSocket is already connected");
       return;
     }
-    const wsBaseUrl =  import.meta.env.VITE_WS_URL;
+    const baseURL = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
     // const wsUrl = `ws://localhost:8000/ws/${this.clientId}`;
-    const wsUrl = `${wsBaseUrl}/ws/${this.clientId}`;
+    const wsUrl = `${baseURL}/ws/${this.clientId}`;
     console.log("Attempting to connect to WebSocket at:", wsUrl);
     this.ws = new WebSocket(wsUrl);
 

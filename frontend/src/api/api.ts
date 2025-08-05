@@ -5,7 +5,7 @@ import {
   setAccessToken,
 } from "../shared/utils/tokenManager";
 
-const baseURL = import.meta.env.VITE_API_URL;
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // Token management - will be set by AuthContext
 let isRefreshing = false;

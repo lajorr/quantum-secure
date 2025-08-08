@@ -124,7 +124,7 @@ export default function ChatScreen() {
     const ciphertext = encryptCBC(aes, messageBuffer, iv);
 
     const encryptedBase64 = Buffer.from(ciphertext).toString("base64");
-
+    console.log("encryptedBase64", encryptedBase64);
     // Construct message object with encrypted content
     const messageData: Message = {
       chat_id: generateChatId(currentUser!.id, selectedUser!.id),

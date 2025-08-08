@@ -33,7 +33,7 @@ const api = axios.create({
     "ngrok-skip-browser-warning": "true",
   },
   withCredentials: true,
-  timeout: 10000,
+  // timeout: 10000,
 });
 
 // Request interceptor to add access token from state

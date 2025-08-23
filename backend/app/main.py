@@ -8,6 +8,9 @@ origins = [
     "http://localhost",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://192.168.1.83:3000",
+    "http://192.168.42.47:3000",
+    "http://localhost:3000",
     "https://c7ce81358e90.ngrok-free.app"
 ]
 

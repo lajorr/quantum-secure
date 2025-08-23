@@ -3,9 +3,7 @@ import type { Message } from "../types/chat";
 
 export const getUserDetails = async () => {
   try {
-    const response = await api.get("/users/details", {
-      timeout: 10000 // 10 second timeout
-    });
+    const response = await api.get("/users/details");
     return response.data;
   } catch (error) {
     console.error("getUserDetails - API call failed:", error);

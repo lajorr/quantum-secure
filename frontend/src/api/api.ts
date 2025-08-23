@@ -6,7 +6,6 @@ import {
 } from "../shared/utils/tokenManager";
 
 const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-// const baseURL = "http://192.168.49.97:8000";
 
 // Token management - will be set by AuthContext
 let isRefreshing = false;
@@ -31,9 +30,10 @@ const api = axios.create({
   baseURL,
   headers: {
     Accept: "application/json",
-    "Access-Control-Allow-Origin": "*",
+    "ngrok-skip-browser-warning": "true",
   },
-  withCredentials: true, // Important: enables sending/receiving cookies for refresh tokens
+  withCredentials: true,
+  // timeout: 10000,
 });
 
 // Request interceptor to add access token from state
@@ -57,9 +57,11 @@ api.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as any;
-
+    console.log("originalRequest", originalRequest);
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log("handling 401 error, trying to refresh token...");
       if (isRefreshing) {
+        console.log("refreshin");
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -89,6 +91,7 @@ api.interceptors.response.use(
 
         processQueue(null, newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        console.log("calling original request with new token");
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
@@ -100,9 +103,9 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
+    console.log("rejected", api.interceptors.response);
 
     return Promise.reject(error);
   }
 );
-
 export default api;

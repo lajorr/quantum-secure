@@ -6,16 +6,12 @@ interface ChatListProps {
   selectedChatId: string;
   onSelectChat: (chatId: string) => void;
 }
-
 export default function ChatList({
   friendList,
   selectedChatId,
   onSelectChat,
 }: ChatListProps) {
-  console.log("selectedChatId:", selectedChatId);
-
   const checkReciever = (friendId: string) => {
-    console.log("selectedChatId:", selectedChatId);
     return selectedChatId.split("-").includes(friendId);
   };
 

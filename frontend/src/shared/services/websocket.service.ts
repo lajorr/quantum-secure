@@ -1,3 +1,5 @@
+import type { Message } from "../../features/chat";
+
 export interface WebSocketMessage {
   id: string;
   receiver_id: string;
@@ -5,6 +7,10 @@ export interface WebSocketMessage {
   timestamp: string;
   content: string;
   chat_id: string;
+  enc: string;
+  enc_key: string;
+  rsa_pub_key: string;
+  rsa_mod: string;
 }
 
 export class WebSocketService {
@@ -33,7 +39,6 @@ export class WebSocketService {
 
   public setClientId(id: string): void {
     this.clientId = id;
-    console.log("Client ID set:", id);
   }
 
   public isReady(): boolean {
@@ -46,8 +51,9 @@ export class WebSocketService {
       console.log("WebSocket is already connected");
       return;
     }
-
-    const wsUrl = `ws://localhost:8000/ws/${this.clientId}`;
+    const baseURL = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
+    // const wsUrl = `ws://localhost:8000/ws/${this.clientId}`;
+    const wsUrl = `${baseURL}/ws/${this.clientId}`;
     console.log("Attempting to connect to WebSocket at:", wsUrl);
     this.ws = new WebSocket(wsUrl);
 
@@ -104,7 +110,7 @@ export class WebSocketService {
     }
   }
 
-  public sendMessage(message: any): void {
+  public sendMessage(message: Message): void {
     console.log("serviece");
     if (this.ws?.readyState === WebSocket.OPEN) {
       console.log("Sending message:", message);

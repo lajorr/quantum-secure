@@ -4,14 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-app.include_router(user_routes.router)
-app.include_router(auth_routes.router)
-app.include_router(websocket_routes.router)
-
-
 origins = [
     "http://localhost",
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://c7ce81358e90.ngrok-free.app"
 ]
 
 app.add_middleware(
@@ -21,3 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(user_routes.router)
+app.include_router(auth_routes.router)
+app.include_router(websocket_routes.router)
+

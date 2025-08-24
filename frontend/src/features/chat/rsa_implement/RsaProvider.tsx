@@ -3,11 +3,11 @@ import type { RSAPrivateKey, RSAPublicKey } from "../types/rsa";
 import { RSAContext } from "./RsaContext";
 import { RSA } from "./rsa";
 
-const p = 5n;
-const q = 7n;
+const p = 3n;
+const q = 5n;
 const n = p * q;
-const e = 5n;
-const d = 29n;
+const e = 3n;
+const d = 3n;
 
 const publicKey: RSAPublicKey = { e, n };
 const privateKey: RSAPrivateKey = { d, n };

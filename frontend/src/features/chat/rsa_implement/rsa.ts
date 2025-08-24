@@ -6,8 +6,10 @@ export class RSA {
     public privateKey: RSAPrivateKey
   ) {}
 
-  // Modular exponentiation
+  // Modular exponentiation for encryption 
   private modPow(base: bigint, exponent: bigint, modulus: bigint): bigint {
+    //base is plaintext exponent = e, modulus is n for expression C = b^e mod n 
+    //result is ciphertext
     let result = 1n;
     let b = base % modulus;
     let e = exponent;
@@ -25,7 +27,7 @@ export class RSA {
   encrypt(hexString: string): bigint[] {
     const digits = hexString.split("");
     return digits.map((digit) => {
-      const m = BigInt(parseInt(digit, 16));
+      const m = BigInt(parseInt(digit, 16)); //converting hex to decimal then to BigInt 
       if (m >= this.publicKey.n)
         throw new Error(
           `Digit ${digit} too large for modulus ${this.publicKey.n}`

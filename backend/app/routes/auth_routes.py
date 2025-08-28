@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException,  Request, Response, status
 from ..config.database import add_jti_to_blocklist, user_collection
-from ..model.user import Token,  UserCreate,  UserResponse, UserRequest
+from ..model.user import Token,  UserCreate,  UserResponse, UserRequest, LoginRequest
 from ..utils.auth import get_refresh_token_details, hashed_password, verify_password, create_token
 from ..schema.schema import user_serializer
 from datetime import timedelta, datetime, timezone
@@ -26,7 +26,7 @@ async def register(user: UserCreate):
 
 
 @router.post("/login", response_model=Token)
-async def login(response: Response, form_data: UserRequest):
+async def login(response: Response, form_data: LoginRequest):
    
     user = await user_collection.find_one({"email": form_data.email})
     if not user:
@@ -48,8 +48,7 @@ async def login(response: Response, form_data: UserRequest):
         samesite="none",
         expires=2 * 24 * 60 * 60,  # 2 days
         path="/"
-        
-    )
+            )
     return {"access_token": access_token, "token_type": "bearer"}
 
 

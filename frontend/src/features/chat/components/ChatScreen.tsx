@@ -1,14 +1,12 @@
-import LogoutIcon from '@mui/icons-material/Logout'
-import { Buffer } from 'buffer'
-import { useEffect, useMemo, useState } from 'react'
-import { useWebSocket } from '../../../shared/hooks/useWebSocket'
-import { WebSocketService } from '../../../shared/services/websocket.service'
-import { getInitials } from '../../../utils/string_utils'
-import { useAuth } from '../../auth/context/AuthContext'
-import { AES } from '../aes_implement/aes'
-import { encryptCBC } from '../aes_implement/cbc'
-import { useChat } from '../context/ChatContext' // adjust path if needed
-import { useRSA } from '../rsa_implement/RsaContext'
+import SideNav from "../../../components/SideNav";
+import { Buffer } from "buffer";
+import { useEffect, useMemo, useState } from "react";
+import { useWebSocket } from "../../../shared/hooks/useWebSocket";
+import { WebSocketService } from "../../../shared/services/websocket.service";
+import { AES } from "../aes_implement/aes";
+import { encryptCBC } from "../aes_implement/cbc";
+import { useChat } from "../context/ChatContext";
+import { useRSA } from "../rsa_implement/RsaContext";
 
 import type { Message } from '../types/chat'
 import ChatHeader from './ChatHeader'
@@ -19,9 +17,11 @@ import ChatMessages from './ChatMessages'
 import qs from '../../../assets/qs.jpg'
 
 export default function ChatScreen() {
-  const [selectedChatId, setSelectedChatId] = useState<string>('')
-  const [messages, setMessages] = useState<Message[]>([])
-  const { encrypt, publicKey } = useRSA()
+  const [selectedChatId, setSelectedChatId] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [encryptionMethod, setEncryptionMethod] = useState<'RSA' | 'ML-KEM'>('RSA');
+  const [messageMode, setMessageMode] = useState<'Encrypted' | 'Normal'>('Encrypted');
+  const { encrypt, publicKey } = useRSA();
 
   const {
     currentUser,
@@ -32,7 +32,6 @@ export default function ChatScreen() {
     setSelectedUser,
   } = useChat()
   const { sendMessage, addMessageHandler } = useWebSocket()
-  const { logout } = useAuth()
 
   const wsService = WebSocketService.getInstance()
 
@@ -56,7 +55,7 @@ export default function ChatScreen() {
         return [
           ...prev,
           {
-            ...incoming,
+            ...msg,
             id: incoming.id,
             isOwn: incoming.sender_id === currentUser?.id,
           },
@@ -87,9 +86,13 @@ export default function ChatScreen() {
     fetchMessages()
   }, [selectedChatId, selectedUser, currentUser?.id, getChatMessages])
 
-  const handleAvatarClick = () => {
-    console.log('Current User:', currentUser)
-  }
+  const toggleEncryptionMethod = () => {
+    setEncryptionMethod(prev => prev === 'RSA' ? 'ML-KEM' : 'RSA');
+  };
+
+  const toggleMessageMode = () => {
+    setMessageMode(prev => prev === 'Encrypted' ? 'Normal' : 'Encrypted');
+  };
 
   //RSA encryption
   // 1. Define AES key as hex string
@@ -148,63 +151,72 @@ export default function ChatScreen() {
     sendMessage(messageData)
   }
 
-  const handleLogout = async () => {
-    logout()
-    window.location.href = '/'
-  }
-
-  if (!currentUser) {
-    return (
-      <div className="h-screen w-screen bg-gray-200 flex items-center justify-center">
-        <div className="text-xl">Loading user data...</div>
-      </div>
-    )
-  }
+  //for esc button in chat screen (ensure hooks order consistent by declaring before any conditional returns)
+  useEffect( () => {
+    const handleEsc = (e: KeyboardEvent) =>{
+      if(e.key === 'Escape'){
+        console.log('Escape key pressed')
+        setSelectedUser(null)
+        setSelectedChatId("")
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => {
+      window.removeEventListener('keydown', handleEsc)
+    }
+  }, [])  
 
   return (
-    <div className="h-screen w-screen bg-gray-200 flex justify-center">
-      <div className="flex h-full w-full max-w-[1440px]">
-        <div className="w-min bg-gray-800 border-r text-gray-500 p-2 flex flex-col gap-4 items-center justify-end">
-          <LogoutIcon
-            sx={{ cursor: 'pointer', color: 'white' }}
-            onClick={handleLogout}
-          />
-          <div
-            className="cursor-pointer rounded-full size-10 flex justify-center items-center border-2 border-white font-bold"
-            onClick={handleAvatarClick}
-          >
-            <h2 className="text-white">{getInitials(currentUser.username)}</h2>
-          </div>
-        </div>
+    <div className="h-screen w-screen bg-gradient-to-br from-teal-900 via-blue-900 to-slate-900 flex">
+      {/* Left Sidebar - Navigation Panel */}
+      <SideNav />
+
+      {/* Middle Panel - Chat List */}
+      <div className="w-96 bg-black/10 backdrop-blur-md border-r border-white/10">
         <ChatList
           friendList={friendList}
           selectedChatId={selectedChatId}
           onSelectChat={(recieverId) => {
-            const chatId = generateChatId(currentUser!.id, recieverId)
+            const chatId = generateChatId(currentUser?.id || '', recieverId)
             setSelectedChatId(chatId)
             const user = friendList.find((u) => u.id === recieverId) || null
             setSelectedUser(user)
           }}
         />
-        {!selectedUser && (
-          <div className="h-full w-full flex items-center justify-center bg-white">
-            <div className="relative">
-              <img className="h-120" src={qs} alt="LOGO" />
-              <div className="absolute bottom-[180px] flex justify-center w-full">
-                <h2 className=" w-max text-lg">A Secure Chat Application</h2>
-              </div>
+      </div>
+
+      {/* Right Panel - Chat Conversation */}
+      <div className="flex-1 bg-black/5 backdrop-blur-md flex flex-col">
+        {!currentUser ? (
+          <div className="h-full w-full flex items-center justify-center">
+            <div className="text-center">
+              <img className="h-32 w-32 mx-auto mb-4 opacity-30" src={qs} alt="LOGO" />
+              <h2 className="text-2xl font-semibold text-teal-100 mb-2">Loading user data...</h2>
             </div>
           </div>
-        )}
-        {selectedUser && (
-          <div className="flex flex-col w-full">
-            <ChatHeader user={selectedUser} />
+        ) : !selectedUser ? (
+          <div className="h-full w-full flex items-center justify-center">
+            <div className="text-center">
+              <img className="h-32 w-32 mx-auto mb-4 opacity-30" src={qs} alt="LOGO" />
+              <h2 className="text-2xl font-semibold text-teal-100 mb-2">Welcome to Quantum Secure</h2>
+              <p className="text-teal-200/70">Select a chat to start messaging</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <ChatHeader
+              user={selectedUser}
+              encryptionMethod={encryptionMethod}
+              onToggleEncryption={toggleEncryptionMethod}
+              messageMode={messageMode}
+              onToggleMessageMode={toggleMessageMode}
+            />
             <ChatMessages
               messages={messages}
               encryptedAESKeyBase64={encryptedAESKeyBase64}
             />
             <ChatInput onSend={handleSend} />
-          </div>
+          </>
         )}
       </div>
     </div>

@@ -4,6 +4,8 @@ import { AuthProvider } from './features/auth/context/AuthContext'
 import { ChatProvider } from './features/chat/context/ChatContext'
 import { ToastContainer } from 'react-toastify'
 import { ChatScreen } from './features/chat'
+import SettingsPage from './features/chat/components/SettingsPage'
+import ProfilePage from './features/chat/components/ProfilePage'
 import { ProtectedRoute } from './layouts/protectedRoute'
 import { RSAProvider } from './features/chat/rsa_implement/RsaProvider'
 
@@ -30,6 +32,22 @@ function App() {
                 />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<SignupForm />} />
+                <Route
+                  path="/settings"
+                  element={
+                    <ProtectedRoute>
+                      <SettingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </BrowserRouter>
           </ChatProvider>

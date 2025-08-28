@@ -3,14 +3,15 @@ import type { AxiosError } from "axios";
 export const axiosErrorHandler = (error: AxiosError) => {
   let message: string | null = null;
 
-  switch (error.status) {
+  const status = error.response?.status;
+
+  switch (status) {
     case 400:
-      message =
-        (error.response?.data as Record<string, any>).detail || "Bad Request";
+      message = (error.response?.data as Record<string, any>)?.detail || "Bad Request";
       break;
     case 401:
     case 403:
-      message = "Unauthorized";
+      message = (error.response?.data as Record<string, any>)?.detail || "Unauthorized";
       break;
     case 404:
       message = "Not Found";
@@ -19,9 +20,7 @@ export const axiosErrorHandler = (error: AxiosError) => {
       message = "Conflict";
       break;
     case 422:
-      message =
-        (error.response?.data as Record<string, any>).detail[0].msg ||
-        "Unprocessable Entity";
+      message = ((error.response?.data as Record<string, any>)?.detail?.[0]?.msg as string) || "Unprocessable Entity";
       break;
     case 500:
       message = "Internal Server Error";

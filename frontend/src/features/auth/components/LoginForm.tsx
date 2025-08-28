@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
+import qs from "../../../assets/qs.jpg";
+
 export default function LoginForm() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -12,6 +14,7 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   const authContext = useAuth();
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -37,9 +40,7 @@ export default function LoginForm() {
       <div className="w-full max-w-md">
         {/* Logo and Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-white font-bold text-2xl">QS</span>
-          </div>
+          <img className="h-40 w-40 mx-auto mb-4 rounded-xl shadow-lg" src={qs} alt="Quantum Secure Logo" />
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome back</h1>
           <p className="text-gray-600">Sign in to your account</p>
         </div>

@@ -5,9 +5,11 @@ interface ChatHeaderProps {
   user: User;
   encryptionMethod: 'RSA' | 'ML-KEM';
   onToggleEncryption: () => void;
+  messageMode: 'Encrypted' | 'Normal';
+  onToggleMessageMode: () => void;
 }
 
-export default function ChatHeader({ user, encryptionMethod, onToggleEncryption }: ChatHeaderProps) {
+export default function ChatHeader({ user, encryptionMethod, onToggleEncryption, messageMode, onToggleMessageMode }: ChatHeaderProps) {
   if (!user) {
     return null;
   }
@@ -53,24 +55,33 @@ export default function ChatHeader({ user, encryptionMethod, onToggleEncryption 
           </div>
         </div>
         
-        {/* Action Buttons */}
-        <button className="p-2 text-teal-200/70 hover:text-teal-200 hover:bg-white/10 rounded-lg transition-colors group">
-          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-          </svg>
-        </button>
-        
-        <button className="p-2 text-teal-200/70 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors group">
-          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-        </button>
-        
-        <button className="p-2 text-teal-200/70 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-colors group">
-          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-          </svg>
-        </button>
+        {/* Encrypted/Normal Toggle (independent of ML-KEM/RSA) */}
+        <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1 border border-white/10">
+          <button
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              messageMode === 'Encrypted'
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                : 'text-teal-200/80 hover:bg-white/10'
+            }`}
+            onClick={() => {
+              if (messageMode !== 'Encrypted') onToggleMessageMode()
+            }}
+          >
+            Encrypted
+          </button>
+          <button
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              messageMode === 'Normal'
+                ? 'bg-gradient-to-r from-teal-500 to-blue-500 text-white'
+                : 'text-teal-200/80 hover:bg-white/10'
+            }`}
+            onClick={() => {
+              if (messageMode !== 'Normal') onToggleMessageMode()
+            }}
+          >
+            Normal
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -29,6 +29,11 @@ class UserRequest(BaseModel):
                 "Password must contain at least one special character.")
         return value
 
+# Login-only schema: no password strength validators
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
 
 class UserCreate(UserRequest):
     username: str

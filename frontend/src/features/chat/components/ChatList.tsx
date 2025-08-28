@@ -17,7 +17,7 @@ export default function ChatList({
   };
 
   const getTimeAgo = (timestamp?: string) => {
-    if (!timestamp) return "2:45pm";
+    if (!timestamp) return " ";
     const now = new Date();
     const messageTime = new Date(timestamp);
     const diffInMinutes = Math.floor((now.getTime() - messageTime.getTime()) / (1000 * 60));

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
+import qs from "../../../assets/qs.jpg";
 
 export default function SignupForm() {
   const [name, setName] = useState("");
@@ -12,6 +13,7 @@ export default function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [hasPasswordError, setHasPasswordError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; confirmPassword?: string }>({});
   const authContext = useAuth();
   const navigate = useNavigate();
 
@@ -21,7 +23,7 @@ export default function SignupForm() {
     } else {
       setHasPasswordError(false);
     }
-  }, [confirmPassword]);
+  }, [confirmPassword, password]);
 
   useEffect(() => {
     if (authContext.errorMessage) {
@@ -29,8 +31,53 @@ export default function SignupForm() {
     }
   }, [authContext.errorMessage]);
 
+  const validateInput = (
+    usernameValue: string,
+    emailValue: string,
+    passwordValue: string,
+    cPassValue: string
+  ) => {
+    const validationErrors: { name?: string; email?: string; password?: string; confirmPassword?: string } = {};
+
+    if (!usernameValue.trim()) {
+      validationErrors.name = "Username is required";
+    }
+
+    const emailRegex = new RegExp("^[^@]+@[^@]+\\.[^@]{2,}$");
+    if (!emailValue.trim()) {
+      validationErrors.email = "Email is required";
+    } else if (!emailRegex.test(emailValue.trim())) {
+      validationErrors.email = "Enter a valid email";
+    }
+
+    const passwordRegex = new RegExp(
+      "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"
+    );
+    if (!passwordValue.trim()) {
+      validationErrors.password = "Password is required";
+    } else if (!passwordRegex.test(passwordValue.trim())) {
+      validationErrors.password =
+        "Password must be at least 8 characters, include upper, lower, number, and symbol";
+    }
+
+    if (!cPassValue.trim()) {
+      validationErrors.confirmPassword = "Confirm Password is required";
+    } else if (passwordValue !== cPassValue) {
+      validationErrors.confirmPassword = "Passwords do not match";
+    }
+
+    return validationErrors;
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    const foundErrors = validateInput(name, email, password, confirmPassword);
+    if (Object.keys(foundErrors).length > 0) {
+      setErrors(foundErrors);
+      return;
+    }
+
     setIsLoading(true);
     if (password === confirmPassword) {
       const isSuccess = await authContext.signup(name, email, password);
@@ -47,14 +94,18 @@ export default function SignupForm() {
     }
   };
 
+  const clearFieldError = (field: keyof typeof errors) => {
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo and Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-white font-bold text-2xl">QS</span>
-          </div>
+          <img className="h-40 w-40 mx-auto mb-4 rounded-xl shadow-lg" src={qs} alt="Quantum Secure Logo" />
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Create account</h1>
           <p className="text-gray-600">Join Quantum Secure today</p>
         </div>
@@ -72,12 +123,24 @@ export default function SignupForm() {
               <input
                 type="text"
                 id="name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                  errors.name ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                }`}
                 placeholder="Enter your username"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  clearFieldError("name");
+                }}
                 required
+                aria-invalid={!!errors.name}
+                aria-describedby="name-error"
               />
+              {errors.name && (
+                <p id="name-error" className="text-red-500 text-sm mt-2">
+                  {errors.name}
+                </p>
+              )}
             </div>
             
             <div>
@@ -90,12 +153,24 @@ export default function SignupForm() {
               <input
                 type="email"
                 id="email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                  errors.email ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                }`}
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  clearFieldError("email");
+                }}
                 required
+                aria-invalid={!!errors.email}
+                aria-describedby="email-error"
               />
+              {errors.email && (
+                <p id="email-error" className="text-red-500 text-sm mt-2">
+                  {errors.email}
+                </p>
+              )}
             </div>
             
             <div>
@@ -108,12 +183,24 @@ export default function SignupForm() {
               <input
                 type="password"
                 id="password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                  errors.password ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                }`}
                 placeholder="Create a password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearFieldError("password");
+                }}
                 required
+                aria-invalid={!!errors.password}
+                aria-describedby="password-error"
               />
+              {errors.password && (
+                <p id="password-error" className="text-red-500 text-sm mt-2">
+                  {errors.password}
+                </p>
+              )}
             </div>
             
             <div>
@@ -127,19 +214,21 @@ export default function SignupForm() {
                 type="password"
                 id="confirmPassword"
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                  hasPasswordError ? "border-red-300 focus:ring-red-500" : "border-gray-300"
+                  hasPasswordError ? "border-red-300 focus:ring-red-500" : errors.confirmPassword ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
                 }`}
                 placeholder="Confirm your password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  clearFieldError("confirmPassword");
+                }}
                 required
+                aria-invalid={!!(hasPasswordError || errors.confirmPassword)}
+                aria-describedby="confirmPassword-error"
               />
-              {hasPasswordError && (
-                <p className="text-red-500 text-sm mt-2 flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  Passwords do not match
+              {(hasPasswordError || errors.confirmPassword) && (
+                <p id="confirmPassword-error" className="text-red-500 text-sm mt-2">
+                  {errors.confirmPassword || "Passwords do not match"}
                 </p>
               )}
             </div>

@@ -1,10 +1,8 @@
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 // import SmartDisplayIcon from "@mui/icons-material/SmartDisplay";
 import SettingsIcon from "@mui/icons-material/Settings";
-import LogoutIcon from "@mui/icons-material/Logout";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useChat } from "../features/chat/context/ChatContext";
-import { useAuth } from "../features/auth/context/AuthContext";
 import { getInitials } from "../utils/string_utils";
 
 export default function SideNav() {
@@ -14,12 +12,6 @@ export default function SideNav() {
   const isSettings = location.pathname.startsWith("/settings");
   const isProfile = location.pathname.startsWith("/profile");
   const { currentUser } = useChat();
-  const { logout } = useAuth();
-
-  const handleLogout = async () => {
-    logout();
-    window.location.href = "/";
-  };
 
   return (
     <div className="w-20 bg-black/20 backdrop-blur-md border-r border-white/10 flex flex-col items-center py-6">
@@ -52,14 +44,7 @@ export default function SideNav() {
         </div>
       </div>
 
-      <div className="mt-auto">
-        <div 
-          className="w-10 h-10 bg-white/10 hover:bg-red-500/30 rounded-full flex items-center justify-center cursor-pointer transition-all"
-          onClick={handleLogout}
-        >
-          <LogoutIcon style={{ fontSize: 20 }} className="text-white" />
-        </div>
-      </div>
+      {/* Removed logout from sidebar; it now lives in Settings */}
     </div>
   );
 }

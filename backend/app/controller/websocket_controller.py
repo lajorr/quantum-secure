@@ -66,30 +66,33 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
                     "enc_key": message_data.get("enc_key"),
                     "rsa_pub_key": message_data.get("rsa_pub_key"),
                     "rsa_mod": message_data.get("rsa_mod"),
-
+                    "ct": message_data.get("ct"),
                 }
-                logger.info(f"Saving message to DB: {message_doc}")
-                message = await message_collection.insert_one(message_doc)
+                message = None
+                if message_doc["enc"] == "rsa" or message_doc["enc"] == "aes-cbc":
+                    logger.info(f"Saving message to DB: {message_doc}")
+                    message = await message_collection.insert_one(message_doc)
 
                 # Send to sender (echo)
-                await manager.send_personal_message(json.dumps({
-                    "id": str(message.inserted_id),
-                    "sender_id": client_id,
-                    "receiver_id": message_data.get("receiver_id"),
-                    "content": message_data.get("content"),
-                    "timestamp":  message_data.get("timestamp"),
-                    "chat_id": message_data.get("chat_id"),
-                    "enc": message_data.get("enc"),
-                    "enc_key": message_data.get("enc_key"),
-                    "rsa_pub_key": message_data.get("rsa_pub_key"),
-                    "rsa_mod": message_data.get("rsa_mod"),
-                }), client_id)
+                # await manager.send_personal_message(json.dumps({
+                #     "id": str(message.inserted_id),
+                #     "sender_id": client_id,
+                #     "receiver_id": message_data.get("receiver_id"),
+                #     "content": message_data.get("content"),
+                #     "timestamp":  message_data.get("timestamp"),
+                #     "chat_id": message_data.get("chat_id"),
+                #     "enc": message_data.get("enc"),
+                #     "enc_key": message_data.get("enc_key"),
+                #     "rsa_pub_key": message_data.get("rsa_pub_key"),
+                #     "rsa_mod": message_data.get("rsa_mod"),
+                #     "ct": message_data.get("ct"),
+                # }), client_id)
 
                 # Send to recipient if connected
                 to_client = message_data.get("receiver_id")
-                if to_client and to_client in manager.active_connections:
+                if to_client:
                     await manager.send_personal_message(json.dumps({
-                        "id": str(message.inserted_id),
+                        "id": str(message.inserted_id) if message is not None else "",
                         "sender_id": client_id,
                         "receiver_id": message_data.get("receiver_id"),
                         "content": message_data.get("content"),
@@ -99,6 +102,7 @@ async def handle_websocket(websocket: WebSocket, client_id: str):
                         "enc_key": message_data.get("enc_key"),
                         "rsa_pub_key": message_data.get("rsa_pub_key"),
                         "rsa_mod": message_data.get("rsa_mod"),
+                        "ct": message_data.get("ct"),
                     }), to_client)
 
             except json.JSONDecodeError:

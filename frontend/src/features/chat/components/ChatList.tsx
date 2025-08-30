@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import type { User } from '../../../shared/types/User'
-import { getInitials } from '../../../utils/string_utils'
+import { useState } from "react";
+import type { Friend } from "../../../shared/types/User";
+import { getInitials } from "../../../utils/string_utils";
 
 interface ChatListProps {
-  friendList: User[]
-  selectedChatId: string
-  onSelectChat: (chatId: string) => void
+  friendList: Friend[];
+  selectedChatId: string;
+  onSelectChat: (friend: Friend) => void;
 }
 
 export default function ChatList({
@@ -13,52 +13,52 @@ export default function ChatList({
   selectedChatId,
   onSelectChat,
 }: ChatListProps) {
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState("");
 
   const checkReciever = (friendId: string) => {
-    return selectedChatId.split('-').includes(friendId)
-  }
+    return selectedChatId.split("-").includes(friendId);
+  };
 
   const getTimeAgo = (timestamp?: string) => {
-    if (!timestamp) return ' '
-    const now = new Date()
-    const messageTime = new Date(timestamp)
+    if (!timestamp) return " ";
+    const now = new Date();
+    const messageTime = new Date(timestamp);
     const diffInMinutes = Math.floor(
       (now.getTime() - messageTime.getTime()) / (1000 * 60)
-    )
+    );
 
-    if (diffInMinutes < 1) return 'now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m`
+    if (diffInMinutes < 1) return "now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60)
-      const minutes = diffInMinutes % 60
-      return `${hours}:${minutes.toString().padStart(2, '0')}pm`
+      const hours = Math.floor(diffInMinutes / 60);
+      const minutes = diffInMinutes % 60;
+      return `${hours}:${minutes.toString().padStart(2, "0")}pm`;
     }
-    return 'Yesterday'
-  }
+    return "Yesterday";
+  };
 
   // Generate varied avatar colors for visual interest
   const getAvatarColors = (username: string, isSelected: boolean) => {
     if (isSelected) {
-      return 'bg-gradient-to-br from-purple-400 to-pink-500 text-white'
+      return "bg-gradient-to-br from-purple-400 to-pink-500 text-white";
     }
 
     // Create varied but consistent colors based on username
     const colors = [
-      'bg-gradient-to-br from-teal-400/50 to-blue-500/50 text-teal-100',
-      'bg-gradient-to-br from-purple-400/50 to-pink-500/50 text-purple-100',
-      'bg-gradient-to-br from-amber-400/50 to-orange-500/50 text-amber-100',
-      'bg-gradient-to-br from-emerald-400/50 to-teal-500/50 text-emerald-100',
-      'bg-gradient-to-br from-indigo-400/50 to-purple-500/50 text-indigo-100',
-    ]
+      "bg-gradient-to-br from-teal-400/50 to-blue-500/50 text-teal-100",
+      "bg-gradient-to-br from-purple-400/50 to-pink-500/50 text-purple-100",
+      "bg-gradient-to-br from-amber-400/50 to-orange-500/50 text-amber-100",
+      "bg-gradient-to-br from-emerald-400/50 to-teal-500/50 text-emerald-100",
+      "bg-gradient-to-br from-indigo-400/50 to-purple-500/50 text-indigo-100",
+    ];
 
-    const index = username.charCodeAt(0) % colors.length
-    return colors[index]
-  }
+    const index = username.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
 
   const filterdItems = friendList.filter((item) =>
     item.username.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
-  )
+  );
 
   return (
     <div className="h-full flex flex-col">
@@ -124,17 +124,17 @@ export default function ChatList({
         ) : (
           <div className="p-4 space-y-2">
             {filterdItems.map((friend) => {
-              const isSelected = checkReciever(friend.id)
+              const isSelected = checkReciever(friend.id);
 
               return (
                 <div
                   key={friend.id}
                   className={`flex items-center p-4 rounded-xl cursor-pointer transition-all duration-200 ${
                     isSelected
-                      ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/40 shadow-lg'
-                      : 'hover:bg-white/10 border border-transparent hover:border-white/5'
+                      ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/40 shadow-lg"
+                      : "hover:bg-white/10 border border-transparent hover:border-white/5"
                   }`}
-                  onClick={() => onSelectChat(friend.id)}
+                  onClick={() => onSelectChat(friend)}
                 >
                   {/* Avatar */}
                   <div
@@ -151,7 +151,7 @@ export default function ChatList({
                     <div className="flex justify-between items-start mb-1">
                       <h3
                         className={`font-semibold truncate ${
-                          isSelected ? 'text-purple-200' : 'text-teal-100'
+                          isSelected ? "text-purple-200" : "text-teal-100"
                         }`}
                       >
                         {friend.username}
@@ -166,7 +166,7 @@ export default function ChatList({
                     <div className="flex justify-between items-center">
                       <p
                         className={`text-sm truncate max-w-[200px] ${
-                          isSelected ? 'text-purple-300' : 'text-teal-200/60'
+                          isSelected ? "text-purple-300" : "text-teal-200/60"
                         }`}
                       >
                         Available for chat
@@ -174,11 +174,11 @@ export default function ChatList({
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

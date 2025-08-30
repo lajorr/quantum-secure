@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { bytesToString, type KeyPair } from "../../../mlkem";
 import type { User } from "../../../shared/types/User";
 import {
   clearAccessToken,
@@ -31,7 +32,8 @@ type AuthContextType = {
   signup: (
     username: string,
     email: string,
-    password: string
+    password: string,
+    keys: KeyPair
   ) => Promise<SignupResponse | null>;
   login: (email: string, password: string) => Promise<boolean>;
   isAuthenticated: boolean;
@@ -83,10 +85,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signup = async (username: string, email: string, password: string) => {
+  const signup = async (
+    username: string,
+    email: string,
+    password: string,
+    keys: KeyPair
+  ) => {
     try {
-      setErrorMessage("");
-      const response = await register(email, username, password);
+      const response =await register(
+        email,
+        username,
+        password,
+        bytesToString(keys.ek),
+        bytesToString(keys.dk)
+      );
       return response;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -153,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const getUserData = async () => {
     try {
       const userData: User = await getUserDetails();
+      console.log("User data:", userData);
       setUser(userData);
     } catch (error) {
       console.error("Failed to get user data:", error);

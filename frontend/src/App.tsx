@@ -1,13 +1,14 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { LoginForm, SignupForm } from './features/auth'
-import { AuthProvider } from './features/auth/context/AuthContext'
-import { ChatProvider } from './features/chat/context/ChatContext'
-import { ToastContainer } from 'react-toastify'
-import { ChatScreen } from './features/chat'
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { LoginForm, SignupForm } from "./features/auth";
+import { AuthProvider } from "./features/auth/context/AuthContext";
+import { ChatProvider } from "./features/chat/context/ChatContext";
+import { ToastContainer } from "react-toastify";
+import { ChatScreen } from "./features/chat";
 import SettingsPage from './features/chat/components/SettingsPage'
 import ProfilePage from './features/chat/components/ProfilePage'
-import { ProtectedRoute } from './layouts/protectedRoute'
-import { RSAProvider } from './features/chat/rsa_implement/RsaProvider'
+import { MLKEMProvider } from "./features/chat/context/MLKemContext";
+import { RSAProvider } from "./features/chat/rsa_implement/RsaProvider";
+import { ProtectedRoute } from "./layouts/protectedRoute";
 import ResetPassword from './features/auth/components/ResetPassword'
 
 function App() {
@@ -18,21 +19,22 @@ function App() {
         position="top-right"
         toastClassName="rounded-xl shadow-lg"
       />
-      <AuthProvider>
-        <RSAProvider>
-          <ChatProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <ChatScreen />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/signup" element={<SignupForm />} />
+      <MLKEMProvider>
+        <AuthProvider>
+          <RSAProvider>
+            <ChatProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                        <ProtectedRoute>
+                        <ChatScreen />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/login" element={<LoginForm />} />
+                  <Route path="/signup" element={<SignupForm />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route
                   path="/settings"
@@ -50,13 +52,14 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-              </Routes>
-            </BrowserRouter>
-          </ChatProvider>
-        </RSAProvider>
-      </AuthProvider>
+                </Routes>
+              </BrowserRouter>
+            </ChatProvider>
+          </RSAProvider>
+        </AuthProvider>
+      </MLKEMProvider>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -1,19 +1,19 @@
-import type { User } from "../../../shared/types/User";
+import type { Friend } from "../../../shared/types/User";
 import { getInitials } from "../../../utils/string_utils";
+import { useChat } from "../context/ChatContext";
 
 interface ChatHeaderProps {
-  user: User;
-  encryptionMethod: 'RSA' | 'ML-KEM';
-  onToggleEncryption: () => void;
-  messageMode: 'Encrypted' | 'Normal';
-  onToggleMessageMode: () => void;
+  user: Friend;
 }
 
-export default function ChatHeader({ user, encryptionMethod, onToggleEncryption, messageMode, onToggleMessageMode }: ChatHeaderProps) {
+export default function ChatHeader({ user }: ChatHeaderProps) {
   if (!user) {
     return null;
   }
-  
+
+  const { toggleEncryptionMethod, encMode, toggleMessageMode, msgViewMode } =
+    useChat();
+
   return (
     <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/10 backdrop-blur-md">
       {/* User Info */}
@@ -22,61 +22,69 @@ export default function ChatHeader({ user, encryptionMethod, onToggleEncryption,
           {getInitials(user.username)}
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-teal-100">{user.username}</h2>
+          <h2 className="text-xl font-semibold text-teal-100">
+            {user.username}
+          </h2>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
             <p className="text-sm text-teal-200/70">Online</p>
           </div>
         </div>
       </div>
-      
+
       {/* Encryption Method Toggle */}
       <div className="flex items-center gap-4">
         <div className="flex flex-col items-center">
-          <span className="text-xs text-teal-200/70 font-medium mb-2">Encryption</span>
+          <span className="text-xs text-teal-200/70 font-medium mb-2">
+            Encryption
+          </span>
           <button
-            onClick={onToggleEncryption}
+            onClick={() => toggleEncryptionMethod()}
             className={`w-16 h-8 rounded-full p-1 transition-all duration-300 ${
-              encryptionMethod === 'ML-KEM' 
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500' 
-                : 'bg-gradient-to-r from-teal-500 to-blue-500'
+              encMode === "ML-KEM"
+                ? "bg-gradient-to-r from-purple-500 to-pink-500"
+                : "bg-gradient-to-r from-teal-500 to-blue-500"
             }`}
           >
-            <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
-              encryptionMethod === 'ML-KEM' ? 'translate-x-8' : 'translate-x-0'
-            }`}></div>
+            <div
+              className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                encMode === "ML-KEM" ? "translate-x-8" : "translate-x-0"
+              }`}
+            ></div>
           </button>
           <div className="text-center mt-2">
-            <span className={`text-xs font-semibold ${
-              encryptionMethod === 'ML-KEM' ? 'text-purple-300' : 'text-teal-300'
-            }`}>
-              {encryptionMethod}
+            <span
+              className={`text-xs font-semibold ${
+                encMode === "ML-KEM" ? "text-purple-300" : "text-teal-300"
+              }`}
+            >
+              {encMode}
             </span>
           </div>
         </div>
-        
+
         {/* Encrypted/Normal Toggle (independent of ML-KEM/RSA) */}
         <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1 border border-white/10">
           <button
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              messageMode === 'Encrypted'
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                : 'text-teal-200/80 hover:bg-white/10'
+              msgViewMode === "Encrypted"
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                : "text-teal-200/80 hover:bg-white/10"
             }`}
             onClick={() => {
-              if (messageMode !== 'Encrypted') onToggleMessageMode()
+              if (msgViewMode !== "Encrypted") toggleMessageMode();
             }}
           >
             Encrypted
           </button>
           <button
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              messageMode === 'Normal'
-                ? 'bg-gradient-to-r from-teal-500 to-blue-500 text-white'
-                : 'text-teal-200/80 hover:bg-white/10'
+              msgViewMode === "Normal"
+                ? "bg-gradient-to-r from-teal-500 to-blue-500 text-white"
+                : "text-teal-200/80 hover:bg-white/10"
             }`}
             onClick={() => {
-              if (messageMode !== 'Normal') onToggleMessageMode()
+              if (msgViewMode !== "Normal") toggleMessageMode();
             }}
           >
             Normal

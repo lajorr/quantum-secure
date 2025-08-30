@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from ..utils.auth import get_access_token_details
-from ..model.user import TokenData, UserResponse, UpdateUser, UpdatePassword, PasswordChangeResponse, UserDetailsResponse
+from ..model.user import FriendResponse, TokenData, UserResponse, UpdateUser, UpdatePassword, PasswordChangeResponse, UserDetailsResponse
 from ..schema.schema import user_serializer
 from ..config.database import user_collection
 from ..utils.auth import hashed_password, verify_password
@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("/details", response_model=UserDetailsResponse)
 async def get_current_user_details(token: TokenData = Depends(get_access_token_details)):
-    print("Token Data:")
+    print(f"Token Data:{token}")
     user = await user_collection.find_one({"_id": ObjectId(token.user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -23,7 +23,7 @@ async def get_current_user_details(token: TokenData = Depends(get_access_token_d
     return user_serializer(user)
 
 
-@router.get("/friends", response_model=List[UserDetailsResponse])
+@router.get("/friends", response_model=List[FriendResponse])
 async def get_friends_list(token: TokenData = Depends(get_access_token_details)):
     friends_list = await user_collection.find({"_id": {"$ne": ObjectId(token.user_id)}}).to_list()
     friends_list = [user_serializer(friend) for friend in friends_list]

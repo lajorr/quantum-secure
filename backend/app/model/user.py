@@ -41,11 +41,19 @@ class LoginRequest(BaseModel):
 
 class UserCreate(UserRequest):
     username: str
+    pub_key: str
+    priv_key: str
 
 
 class UserResponse(UserBase):
     id: str
-    message: str
+    priv_key: str
+    isVerified:bool
+
+
+class FriendResponse(UserBase):
+    id: str
+    pub_key: str
     isVerified: bool
 
 class UserInDB(UserCreate):
@@ -56,6 +64,11 @@ class UserInDB(UserCreate):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class LoginResponse(Token):
+    pub_key: str
+    priv_key: str
 
 
 class TokenData(BaseModel):
@@ -87,6 +100,7 @@ class PasswordChangeResponse(BaseModel):
 class UserDetailsResponse(UserBase):
     id: str
     isVerified: bool
+    priv_key:str
 
 
 class ForgotPasswordRequest(BaseModel):

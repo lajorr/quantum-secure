@@ -8,11 +8,12 @@ origins = [
     "http://localhost",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://192.168.1.83:3000",
+    "http://192.168.1.77:3000",
     "http://192.168.42.47:3000",
     "http://localhost:3000",
     "http://10.64.61.5:3000",
-    # "https://c7ce81358e90.ngrok-free.app"
+    # "http://192.168.49.243:3000",
+
 ]
 
 app.add_middleware(
@@ -27,4 +28,3 @@ app.add_middleware(
 app.include_router(user_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(websocket_routes.router)
-

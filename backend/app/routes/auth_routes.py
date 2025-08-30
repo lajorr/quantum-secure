@@ -6,6 +6,7 @@ from ..utils.auth import get_refresh_token_details, hashed_password, verify_pass
 from ..schema.schema import user_serializer
 from datetime import timedelta, datetime, timezone
 from ..utils.mail import mail, create_message
+from ..utils.templates.html_templates import verify_failed_html, verify_success_html
 from dotenv import load_dotenv
 import os
 # we can also use config instead of os
@@ -85,22 +86,15 @@ async def verify_email(token: str):
             {"_id": user["_id"]},
             {"$set": {"isVerified": True}}
         )
-        html_content = """
-        <html>
-            <head>
-            <title>Email Verified</title>
-        </head>
-        <body>
-            <h1>✅ Your email has been verified successfully!</h1>
-        </body>
-    </html>
-    """
+        html_content = verify_success_html()
+        html_failed = verify_failed_html()
 
         return HTMLResponse(content=html_content, status_code=200)
 
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail="Invalid verification token")
+        # raise HTTPException(
+        #     status_code=400, detail="Invalid verification token")
+        return HTMLResponse(content=html_failed, status_code=400)
 
 
 @router.get("/check-verification/{email}")

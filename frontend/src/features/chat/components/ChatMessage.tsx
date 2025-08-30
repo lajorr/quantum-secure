@@ -1,49 +1,49 @@
-import { getInitials } from "../../../utils/string_utils";
-import { useChat } from "../context/ChatContext";
-import type { Message } from "../types/chat";
+import { getInitials } from '../../../utils/string_utils'
+import { useChat } from '../context/ChatContext'
+import type { Message } from '../types/chat'
 
 interface ChatMessageProps {
-  message: Message;
+  message: Message
 }
 
 export default function ChatMessage({ message }: ChatMessageProps) {
-  const isOwn = message.isOwn;
-  const date = new Date(message.timestamp);
-  const selectedUser = useChat().selectedUser;
+  const isOwn = message.isOwn
+  const date = new Date(message.timestamp)
+  const selectedUser = useChat().selectedUser
 
-  const formatted = new Intl.DateTimeFormat("en-us", {
-    hour: "2-digit",
-    minute: "2-digit",
+  const formatted = new Intl.DateTimeFormat('en-us', {
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: false,
-  }).format(date);
+  }).format(date)
 
   // Generate varied avatar colors for visual interest
   const getAvatarColors = (username: string) => {
     const colors = [
-      "bg-gradient-to-br from-teal-400/50 to-blue-500/50 text-teal-100",
-      "bg-gradient-to-br from-purple-400/50 to-pink-500/50 text-purple-100",
-      "bg-gradient-to-br from-amber-400/50 to-orange-500/50 text-amber-100",
-      "bg-gradient-to-br from-emerald-400/50 to-teal-500/50 text-emerald-100",
-      "bg-gradient-to-br from-indigo-400/50 to-purple-500/50 text-indigo-100",
-    ];
+      'bg-gradient-to-br from-teal-400/50 to-blue-500/50 text-teal-100',
+      'bg-gradient-to-br from-purple-400/50 to-pink-500/50 text-purple-100',
+      'bg-gradient-to-br from-amber-400/50 to-orange-500/50 text-amber-100',
+      'bg-gradient-to-br from-emerald-400/50 to-teal-500/50 text-emerald-100',
+      'bg-gradient-to-br from-indigo-400/50 to-purple-500/50 text-indigo-100',
+    ]
 
-    const index = username.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
+    const index = username.charCodeAt(0) % colors.length
+    return colors[index]
+  }
 
   return (
     <div
-      className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-6 gap-3`}
+      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-6 gap-3`}
     >
       {/* Avatar for incoming messages */}
       {!isOwn && (
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center border-2 border-white/20 shadow-sm ${getAvatarColors(
-            selectedUser?.username || "U"
+            selectedUser?.username || 'U'
           )}`}
         >
           <span className="text-xs font-semibold">
-            {getInitials(selectedUser?.username || "U")}
+            {getInitials(selectedUser?.username || 'U')}
           </span>
         </div>
       )}
@@ -54,11 +54,11 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         <div
           className={`rounded-2xl px-4 py-3 shadow-sm ${
             isOwn
-              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-br-md"
-              : "bg-white/20 backdrop-blur-sm text-teal-100 rounded-bl-md border border-white/10"
+              ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-br-md'
+              : 'bg-white/20 backdrop-blur-sm text-teal-100 rounded-bl-md border border-white/10'
           }`}
         >
-          <div className="text-sm leading-relaxed whitespace-pre-line">
+          <div className="text-sm leading-relaxed whitespace-pre-line break-words overflow-wrap-anywhere">
             {message.content}
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         {/* Message Meta */}
         <div
           className={`flex items-center gap-2 mt-2 ${
-            isOwn ? "justify-end" : "justify-start"
+            isOwn ? 'justify-end' : 'justify-start'
           }`}
         >
           {/* Read receipts for own messages */}
@@ -100,7 +100,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           {/* Timestamp */}
           <span
             className={`text-xs ${
-              isOwn ? "text-purple-300" : "text-teal-200/70"
+              isOwn ? 'text-purple-300' : 'text-teal-200/70'
             }`}
           >
             {formatted}
@@ -109,10 +109,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           {/* Encryption method */}
           <span
             className={`text-xs ${
-              isOwn ? "text-purple-300" : "text-teal-200/70"
+              isOwn ? 'text-purple-300' : 'text-teal-200/70'
             }`}
           >
-            {message.enc || "AES-CBC"}
+            {message.enc || 'AES-CBC'}
           </span>
         </div>
       </div>
@@ -121,10 +121,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       {isOwn && (
         <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center border-2 border-white/20 shadow-sm">
           <span className="text-xs font-semibold text-white">
-            {getInitials("Me")}
+            {getInitials('Me')}
           </span>
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,31 +1,31 @@
-import { Buffer } from "buffer";
-import { useEffect, useState } from "react";
-import SideNav from "../../../components/SideNav";
-import { useWebSocket } from "../../../shared/hooks/useWebSocket";
-import { WebSocketService } from "../../../shared/services/websocket.service";
-import { AES } from "../aes_implement/aes";
-import { encryptCBC } from "../aes_implement/cbc";
-import { useChat } from "../context/ChatContext";
-import { useRSA } from "../rsa_implement/RsaContext";
+import { Buffer } from 'buffer'
+import { useEffect, useState } from 'react'
+import SideNav from '../../../components/SideNav'
+import { useWebSocket } from '../../../shared/hooks/useWebSocket'
+import { WebSocketService } from '../../../shared/services/websocket.service'
+import { AES } from '../aes_implement/aes'
+import { encryptCBC } from '../aes_implement/cbc'
+import { useChat } from '../context/ChatContext'
+import { useRSA } from '../rsa_implement/RsaContext'
 
-import type { Message } from "../types/chat";
-import ChatHeader from "./ChatHeader";
-import ChatInput from "./ChatInput";
-import ChatList from "./ChatList";
+import type { Message } from '../types/chat'
+import ChatHeader from './ChatHeader'
+import ChatInput from './ChatInput'
+import ChatList from './ChatList'
 
-import qs from "../../../assets/qs.jpg";
-import { bytesToBigInt, bytesToString } from "../../../mlkem";
-import { useMLKEM } from "../context/MLKemContext";
-import ChatMessages from "./ChatMessages";
+import qs from '../../../assets/qs.jpg'
+import { bytesToBigInt, bytesToString } from '../../../mlkem'
+import { useMLKEM } from '../context/MLKemContext'
+import ChatMessages from './ChatMessages'
 
 export default function ChatScreen() {
-  const [selectedChatId, setSelectedChatId] = useState<string>("");
-  const [rsaMessages, setRsaMessages] = useState<Message[]>([]);
-  const [mlkemMessages, setMlkemMessages] = useState<Message[]>([]);
+  const [selectedChatId, setSelectedChatId] = useState<string>('')
+  const [rsaMessages, setRsaMessages] = useState<Message[]>([])
+  const [mlkemMessages, setMlkemMessages] = useState<Message[]>([])
 
-  const [aes, setAes] = useState<AES>();
-  const { publicKey, getEncryptedAesKey, getAesBigIntKey } = useRSA();
-  const mlkemCtx = useMLKEM();
+  const [aes, setAes] = useState<AES>()
+  const { publicKey, getEncryptedAesKey, getAesBigIntKey } = useRSA()
+  const mlkemCtx = useMLKEM()
 
   const {
     currentUser,
@@ -36,29 +36,29 @@ export default function ChatScreen() {
     setSelectedUser,
     encMode,
     toggleEncryptionMethod,
-  } = useChat();
-  const { sendMessage, addMessageHandler } = useWebSocket();
+  } = useChat()
+  const { sendMessage, addMessageHandler } = useWebSocket()
 
-  const wsService = WebSocketService.getInstance();
+  const wsService = WebSocketService.getInstance()
 
   useEffect(() => {
     const removeHandler = addMessageHandler((msg) => {
-      const incoming = msg;
+      const incoming = msg
 
       // Check if message ID already exists in state
-      if (incoming.enc === "rsa")
+      if (incoming.enc === 'rsa')
         setRsaMessages((prev) => {
-          if (!incoming || !incoming.sender_id) return prev;
-          const exists = prev.some((m) => m.id === incoming.id);
-          if (exists) return prev;
+          if (!incoming || !incoming.sender_id) return prev
+          const exists = prev.some((m) => m.id === incoming.id)
+          if (exists) return prev
 
           const isRelevant =
             (incoming.sender_id === selectedUser?.id &&
               incoming.receiver_id === currentUser?.id) ||
             (incoming.sender_id === currentUser?.id &&
-              incoming.receiver_id === selectedUser?.id);
+              incoming.receiver_id === selectedUser?.id)
 
-          if (!isRelevant) return prev;
+          if (!isRelevant) return prev
 
           return [
             ...prev,
@@ -67,12 +67,12 @@ export default function ChatScreen() {
               id: incoming.id,
               isOwn: incoming.sender_id === currentUser?.id,
             },
-          ];
-        });
+          ]
+        })
       else
         setMlkemMessages((prev) => {
-          console.log("setting mlkem messages");
-          if (!incoming || !incoming.sender_id) return prev;
+          console.log('setting mlkem messages')
+          if (!incoming || !incoming.sender_id) return prev
           // const exists = prev.some((m) => m.id === incoming.id);
           // if (exists) return prev;
 
@@ -80,10 +80,10 @@ export default function ChatScreen() {
             (incoming.sender_id === selectedUser?.id &&
               incoming.receiver_id === currentUser?.id) ||
             (incoming.sender_id === currentUser?.id &&
-              incoming.receiver_id === selectedUser?.id);
-          console.log("relevamt", isRelevant);
-          if (!isRelevant) return prev;
-          console.log("msg", incoming.content);
+              incoming.receiver_id === selectedUser?.id)
+          console.log('relevamt', isRelevant)
+          if (!isRelevant) return prev
+          console.log('msg', incoming.content)
 
           return [
             ...prev,
@@ -92,49 +92,49 @@ export default function ChatScreen() {
               id: incoming.id,
               isOwn: incoming.sender_id === currentUser?.id,
             },
-          ];
-        });
-    });
+          ]
+        })
+    })
 
-    return () => removeHandler();
-  }, [selectedChatId, currentUser?.id, selectedUser?.id]);
+    return () => removeHandler()
+  }, [selectedChatId, currentUser?.id, selectedUser?.id])
 
   useEffect(() => {
     async function fetchMessages() {
       if (selectedChatId && selectedUser) {
         try {
-          const chatMessages = await getChatMessages(selectedChatId);
+          const chatMessages = await getChatMessages(selectedChatId)
           setRsaMessages(
             chatMessages.map((msg) => ({
               ...msg,
               isOwn: msg.sender_id === currentUser?.id,
             }))
-          );
+          )
         } catch (error) {
-          console.error("Failed to fetch messages:", error);
-          setRsaMessages([]);
+          console.error('Failed to fetch messages:', error)
+          setRsaMessages([])
         }
       }
     }
-    fetchMessages();
-  }, [selectedChatId, selectedUser, currentUser?.id]);
+    fetchMessages()
+  }, [selectedChatId, selectedUser, currentUser?.id])
 
   const handleSend = (text: string) => {
     if (!currentUser || !selectedUser) {
-      console.error("No current user or selected user");
-      return;
+      console.error('No current user or selected user')
+      return
     }
 
     // Convert user input to Buffer
-    const messageBuffer = Buffer.from(text, "utf8");
+    const messageBuffer = Buffer.from(text, 'utf8')
 
     // Generate new random IV per message
-    const iv = new Uint8Array(16);
-    crypto.getRandomValues(iv);
-    const aess = encMode === "RSA" ? new AES(getAesBigIntKey()) : aes;
+    const iv = new Uint8Array(16)
+    crypto.getRandomValues(iv)
+    const aess = encMode === 'RSA' ? new AES(getAesBigIntKey()) : aes
     // Encrypt user input with AES CBC mode and Encode combined buffer as Base64 string
-    const ciphertext = encryptCBC(aess!, messageBuffer, iv);
-    const encryptedBase64 = Buffer.from(ciphertext).toString("base64");
+    const ciphertext = encryptCBC(aess!, messageBuffer, iv)
+    const encryptedBase64 = Buffer.from(ciphertext).toString('base64')
 
     // Construct message object with encrypted content
     const messageData: Message = {
@@ -144,45 +144,45 @@ export default function ChatScreen() {
       content: encryptedBase64,
       timestamp: new Date().toISOString(),
       isOwn: true,
-      enc: encMode === "RSA" ? "rsa" : "ml-kem",
-      enc_key: encMode === "RSA" ? getEncryptedAesKey() : "", //encrypted AES key
-      ct: encMode === "RSA" ? "" : bytesToString(mlkemCtx.getCipherText()),
+      enc: encMode === 'RSA' ? 'rsa' : 'ml-kem',
+      enc_key: encMode === 'RSA' ? getEncryptedAesKey() : '', //encrypted AES key
+      ct: encMode === 'RSA' ? '' : bytesToString(mlkemCtx.getCipherText()),
       rsa_mod: publicKey.n.toString(),
       rsa_pub_key: publicKey.e.toString(),
-    };
+    }
 
     if (!wsService.isReady()) {
-      console.warn("WebSocket not connected yet. Message queued.");
-      return;
+      console.warn('WebSocket not connected yet. Message queued.')
+      return
     }
-    if (encMode === "RSA") {
-      setRsaMessages((prev) => [...prev, messageData]);
+    if (encMode === 'RSA') {
+      setRsaMessages((prev) => [...prev, messageData])
     } else {
-      setMlkemMessages((prev) => [...prev, messageData]);
+      setMlkemMessages((prev) => [...prev, messageData])
     }
-    sendMessage(messageData);
-  };
+    sendMessage(messageData)
+  }
 
   //for esc button in chat screen (ensure hooks order consistent by declaring before any conditional returns)
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        console.log("Escape key pressed");
-        setSelectedUser(null);
-        setSelectedChatId("");
-        setRsaMessages([]);
-        setMlkemMessages([]);
+      if (e.key === 'Escape') {
+        console.log('Escape key pressed')
+        setSelectedUser(null)
+        setSelectedChatId('')
+        setRsaMessages([])
+        setMlkemMessages([])
       }
-    };
-    window.addEventListener("keydown", handleEsc);
+    }
+    window.addEventListener('keydown', handleEsc)
     return () => {
-      window.removeEventListener("keydown", handleEsc);
-    };
-  }, []);
+      window.removeEventListener('keydown', handleEsc)
+    }
+  }, [])
 
   useEffect(() => {
-    setMlkemMessages([]);
-  }, [encMode]);
+    setMlkemMessages([])
+  }, [encMode])
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-teal-900 via-blue-900 to-slate-900 flex">
@@ -195,15 +195,15 @@ export default function ChatScreen() {
           friendList={friendList}
           selectedChatId={selectedChatId}
           onSelectChat={(friend) => {
-            const chatId = generateChatId(currentUser!.id, friend.id);
-            setSelectedChatId(chatId);
-            const fr = friendList.find((u) => u.id === friend.id) || null;
-            setSelectedUser(fr);
-            const aesKeyHex = mlkemCtx.getAesKey(fr?.pub_key!);
-            const aesKeyBigInt = bytesToBigInt(aesKeyHex);
-            const aes = new AES(aesKeyBigInt);
-            setAes(aes);
-            toggleEncryptionMethod("RSA");
+            const chatId = generateChatId(currentUser!.id, friend.id)
+            setSelectedChatId(chatId)
+            const fr = friendList.find((u) => u.id === friend.id) || null
+            setSelectedUser(fr)
+            const aesKeyHex = mlkemCtx.getAesKey(fr?.pub_key!)
+            const aesKeyBigInt = bytesToBigInt(aesKeyHex)
+            const aes = new AES(aesKeyBigInt)
+            setAes(aes)
+            toggleEncryptionMethod('RSA')
             // setRsaMessages([]);
           }}
         />
@@ -227,11 +227,38 @@ export default function ChatScreen() {
         ) : !selectedUser ? (
           <div className="h-full w-full flex items-center justify-center">
             <div className="text-center">
-              <img
+              {/* <img
                 className="h-32 w-32 mx-auto mb-4 opacity-30"
                 src={qs}
                 alt="LOGO"
-              />
+              /> */}
+
+              <svg
+                width="24px"
+                height="24px"
+                viewBox="0 0 24 24"
+                className="mx-auto mb-4 w-35 h-35 text-teal-200"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* <title>Shield QS</title> */}
+                <g>
+                  <path d="M20.237,6.289C17.142,5.256,13.36,3.3,12.55,2.474a.748.748,0,0,0-.529-.224.82.82,0,0,0-.532.216A20.312,20.312,0,0,1,3.8,6.409a.749.749,0,0,0-.546.721c0,8.232,1.279,12.515,8.545,14.591a.746.746,0,0,0,.412,0C19.517,19.632,20.75,15.492,20.75,7A.75.75,0,0,0,20.237,6.289ZM12,20.219c-6-1.777-7.2-4.9-7.249-12.529a22.815,22.815,0,0,0,7.278-3.7,33.74,33.74,0,0,0,7.219,3.545C19.2,15.281,18.012,18.439,12,20.219Z" />
+                  {/* QS Text */}
+                  <text
+                    x="12"
+                    y="14"
+                    textAnchor="middle"
+                    fontSize="6"
+                    fontWeight="bold"
+                    fill="currentColor"
+                    fontFamily="system-ui, -apple-system, sans-serif"
+                  >
+                    QS
+                  </text>
+                </g>
+              </svg>
+
               <h2 className="text-2xl font-semibold text-teal-100 mb-2">
                 Welcome to Quantum Secure
               </h2>
@@ -244,12 +271,12 @@ export default function ChatScreen() {
           <>
             <ChatHeader user={selectedUser} />
             <ChatMessages
-              messages={encMode === "RSA" ? rsaMessages : mlkemMessages}
+              messages={encMode === 'RSA' ? rsaMessages : mlkemMessages}
             />
             <ChatInput onSend={handleSend} />
           </>
         )}
       </div>
     </div>
-  );
+  )
 }

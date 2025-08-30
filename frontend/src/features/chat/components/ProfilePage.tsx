@@ -2,12 +2,52 @@ import { useChat } from '../context/ChatContext'
 import SideNav from "../../../components/SideNav";
 import EditIcon from '@mui/icons-material/Edit';
 import PersonIcon from '@mui/icons-material/Person';
+import { useState } from 'react';
+import { updateUser } from '../services/userServices'
 
 export default function ProfilePage() {
-  const { currentUser } = useChat()
+  const { currentUser, setCurrentUser } = useChat()
 
-  const displayName = currentUser?.username || '—'
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [newName, setNewName] = useState(currentUser?.username || '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  var displayName = currentUser?.username || '—'
   const email = currentUser?.email || '—'
+
+  const handleStartEdit = () => {
+    setError(null)
+    setNewName(displayName)
+    setIsEditingName(true)
+  }
+
+  const handleCancel = () => {
+    setIsEditingName(false)
+    setNewName(displayName)
+    setError(null)
+  }
+
+  const handleSave = async () => {
+    if (!currentUser?.id) return
+    if (!newName.trim()) {
+      setError('Name cannot be empty')
+      return
+    }
+    try {
+      setSaving(true)
+      setError(null)
+      await updateUser(newName.trim())
+      setCurrentUser({...currentUser!,
+        username:newName}
+      )
+      setIsEditingName(false)
+    } catch (e) {
+      setError('Failed to update name')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-teal-900 via-blue-900 to-slate-900 flex">
@@ -29,10 +69,27 @@ export default function ProfilePage() {
           {/* Name */}
           <div className="mb-8">
             <div className="text-sm text-teal-200/70 mb-2">Name</div>
-            <div className="flex items-center justify-between">
-              <div className="text-base">{displayName}</div>
-              <button className="p-2 rounded hover:bg-white/10"><EditIcon fontSize="small" /></button>
-            </div>
+            {/* If not editing, show the name and edit button */}
+            {!isEditingName ? (
+              <div className="flex items-center justify-between">
+                <div className="text-base">{displayName}</div>
+                <button className="p-2 rounded hover:bg-white/10" onClick={handleStartEdit} aria-label="Edit name"><EditIcon fontSize="small" /></button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <input
+                  className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-400 text-teal-100"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Enter your name"
+                />
+                {error && <div className="text-red-300 text-sm">{error}</div>}
+                <div className="flex gap-2">
+                  <button disabled={saving} onClick={handleSave} className="px-3 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white">{saving ? 'Saving...' : 'Save'}</button>
+                  <button onClick={handleCancel} className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20">Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Email (read-only) */}

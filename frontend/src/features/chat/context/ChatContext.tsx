@@ -12,6 +12,7 @@ type ChatContextType = {
   isLoading: boolean;
   friendList: User[];
   currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
   getUserData: () => Promise<void>;
   selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
@@ -79,6 +80,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         getUserData,
         friendList,
         currentUser,
+        setCurrentUser,
         isLoading,
         generateChatId,
         getChatMessages,

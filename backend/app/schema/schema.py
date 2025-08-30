@@ -5,5 +5,6 @@ def user_serializer(user) -> dict:
     return {
         "id": str(user["_id"]),
         "username": user["username"],
-        "email": user["email"]
+        "email": user["email"],
+        "isVerified": user.get("isVerified", False)
     }

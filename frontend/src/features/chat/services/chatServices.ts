@@ -30,3 +30,4 @@ export const fetchMessages = async (chatId: string): Promise<Message[]> => {
     throw error;
   }
 };
+

@@ -22,6 +22,7 @@ import {
   signup as register,
 } from "../services/authService";
 import type { LoginResponse } from "../types/login_response";
+import type { SignupResponse } from "../types/signup_response";
 
 type AuthContextType = {
   user: User | null;
@@ -31,7 +32,7 @@ type AuthContextType = {
     username: string,
     email: string,
     password: string
-  ) => Promise<boolean>;
+  ) => Promise<SignupResponse | null>;
   login: (email: string, password: string) => Promise<boolean>;
   isAuthenticated: boolean;
   checkToken: () => Promise<void>;
@@ -85,8 +86,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (username: string, email: string, password: string) => {
     try {
       setErrorMessage("");
-      await register(email, username, password);
-      return true;
+      const response = await register(email, username, password);
+      return response;
     } catch (error) {
       if (error instanceof AxiosError) {
         const errorMessage = axiosErrorHandler(error);
@@ -96,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Unexpected error:", error);
         setErrorMessage(errorMessage);
       }
-      return false;
+      return null;
     }
   };
 

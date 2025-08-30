@@ -4,12 +4,14 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from dotenv import load_dotenv
+from itsdangerous import URLSafeTimedSerializer
 import os
 import uuid
 import logging
 
-from ..config.database import token_in_blacklist
 
+from ..config.database import token_in_blacklist
+ 
 from ..model.user import TokenData
 
 load_dotenv()
@@ -22,6 +24,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+# This is serializer for safe mail token
+serializer = URLSafeTimedSerializer(
+        secret_key = SECRET_KEY, salt = "email-configuration"
+    )
+
 
 
 def hashed_password(password: str):
@@ -133,3 +141,16 @@ async def get_access_token_details(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
 
     return payload
+
+def create_url_safe_token(data:dict):
+    token = serializer.dumps(data)
+    return token
+
+def decode_url_safe_token(token:str):
+    try:
+        token_data = serializer.loads(token, max_age=900)
+        return token_data
+    except Exception as e:
+        raise e
+
+

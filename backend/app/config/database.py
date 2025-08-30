@@ -33,3 +33,13 @@ async def token_in_blacklist(jti: str) -> bool:
     except Exception as e:
         print(f"Error checking JTI in blocklist: {e}")
         return False
+
+
+async def get_user_by_email(email: str):
+    """Get user by email address"""
+    try:
+        user = await user_collection.find_one({"email": email})
+        return user
+    except Exception as e:
+        print(f"Error getting user by email: {e}")
+        return None

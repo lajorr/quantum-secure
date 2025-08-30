@@ -8,11 +8,12 @@ import SettingsPage from './features/chat/components/SettingsPage'
 import ProfilePage from './features/chat/components/ProfilePage'
 import { ProtectedRoute } from './layouts/protectedRoute'
 import { RSAProvider } from './features/chat/rsa_implement/RsaProvider'
+import ResetPassword from './features/auth/components/ResetPassword'
 
 function App() {
   return (
     <>
-      <ToastContainer 
+      <ToastContainer
         autoClose={3000}
         position="top-right"
         toastClassName="rounded-xl shadow-lg"
@@ -32,6 +33,7 @@ function App() {
                 />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<SignupForm />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route
                   path="/settings"
                   element={

@@ -14,6 +14,7 @@ export type Message = {
   enc_key: string;
   rsa_pub_key: string;
   rsa_mod: string;
+  ct: string;
 };
 
 export type ChatListItem = {
@@ -24,4 +25,9 @@ export type ChatListItem = {
   unreadCount?: number;
   isGroup?: boolean;
   participants?: User[];
+};
+
+export type MessageResonse = {
+  pub_key: string;
+  messages: Message[];
 };

@@ -11,6 +11,7 @@ export interface WebSocketMessage {
   enc_key: string;
   rsa_pub_key: string;
   rsa_mod: string;
+  ct: string;
 }
 
 export class WebSocketService {

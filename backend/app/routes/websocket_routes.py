@@ -29,6 +29,7 @@ async def get_messages(chat_id: str, token: TokenData = Depends(get_access_token
         async for msg in messages_cursor:
             msg["id"] = str(msg["_id"])
             messages.append(msg)
+        print(f'messages: {messages}')
         return messages
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

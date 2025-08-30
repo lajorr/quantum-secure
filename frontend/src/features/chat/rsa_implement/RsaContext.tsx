@@ -7,6 +7,9 @@ export interface RSAContextType {
   decryptDigit: (cipher: bigint) => string;
   encrypt?: (hexString: string) => bigint[];
   decrypt?: (chunks: bigint[]) => string;
+  getEncryptedAesKey: () => string;
+  getAesBigIntKey: () => bigint;
+  decryptAesKey: (encAesKey: string) => bigint;
 }
 
 export const RSAContext = createContext<RSAContextType | null>(null);

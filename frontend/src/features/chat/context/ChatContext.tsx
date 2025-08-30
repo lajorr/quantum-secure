@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import type { User } from "../../../shared/types/User";
+import type { Friend, User } from "../../../shared/types/User";
 import { useAuth } from "../../auth/context/AuthContext";
 import {
   fetchMessages,
@@ -10,24 +10,45 @@ import type { Message } from "../types/chat";
 
 type ChatContextType = {
   isLoading: boolean;
-  friendList: User[];
+  friendList: Friend[];
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   getUserData: () => Promise<void>;
-  selectedUser: User | null;
-  setSelectedUser: (user: User | null) => void;
+  selectedUser: Friend | null;
+  setSelectedUser: (user: Friend | null) => void;
   generateChatId: (senderId: string, receiverId: string) => string;
   getChatMessages: (chatId: string) => Promise<Message[]>;
+  encMode: "RSA" | "ML-KEM";
+  toggleEncryptionMethod: (mode?: "RSA" | "ML-KEM") => void;
+  msgViewMode: "Encrypted" | "Normal";
+  toggleMessageMode: () => void;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const [friendList, setFriendsList] = useState<User[]>([]);
+  const [friendList, setFriendsList] = useState<Friend[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { isAuthenticated } = useAuth();
+
+  const [encMode, setEncMode] = useState<"RSA" | "ML-KEM">("RSA");
+  const [msgViewMode, setMsgViewMode] = useState<"Encrypted" | "Normal">(
+    "Normal"
+  );
+
+  const toggleEncryptionMethod = (mode?: "RSA" | "ML-KEM") => {
+    if (mode != null) {
+      setEncMode(mode);
+      return;
+    }
+    setEncMode((prev) => (prev === "RSA" ? "ML-KEM" : "RSA"));
+  };
+
+  const toggleMessageMode = () => {
+    setMsgViewMode((prev) => (prev === "Encrypted" ? "Normal" : "Encrypted"));
+  };
 
   const getUserData = async () => {
     try {
@@ -44,7 +65,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getUserFriends = async () => {
     try {
-      const friendsList: User[] = await getUserFiendList();
+      const friendsList: Friend[] = await getUserFiendList();
+      console.log("friendsList context: ", friendsList);
       setFriendsList(friendsList || []);
     } catch (error) {
       console.error("Failed to get friends list:", error);
@@ -86,6 +108,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         getChatMessages,
         selectedUser,
         setSelectedUser,
+        toggleEncryptionMethod,
+        encMode,
+        toggleMessageMode,
+        msgViewMode,
       }}
     >
       {children}

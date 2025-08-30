@@ -23,16 +23,29 @@ export const login = async (
 export const signup = async (
   email: string,
   username: string,
-  password: string
+  password: string,
+  pub_key: string,
+  priv_key: string
 ): Promise<SignupResponse> => {
   try {
-    console.log("email", email, "username", username, "password", password);
+    console.log(
+      "email",
+      email,
+      "username",
+      username,
+      "password",
+      password,
+      pub_key,
+      priv_key
+    );
     const response = await api.post(
       "/auth/register",
       {
         email,
         username,
         password,
+        pub_key,
+        priv_key,
       },
       {
         withCredentials: true, // Ensure cookies are sent

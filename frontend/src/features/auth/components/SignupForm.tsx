@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useMLKEM } from "../../chat/context/MLKemContext";
 import { useAuth } from "../context/AuthContext";
 import qs from "../../../assets/qs.jpg";
 import { validatePassword, validateEmail } from "../../../shared/utils/validation";
@@ -20,6 +21,7 @@ export default function SignupForm() {
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; confirmPassword?: string }>({});
   const authContext = useAuth();
   const navigate = useNavigate();
+  const { keygen } = useMLKEM();
 
   useEffect(() => {
     if (confirmPassword !== password) {
@@ -108,8 +110,9 @@ export default function SignupForm() {
 
     setIsLoading(true);
     if (password === confirmPassword) {
+      const keys = keygen();
       try {
-        const response = await authContext.signup(name, email, password);
+        const response = await authContext.signup(name, email, password, keys);
         if (response) {
           setUserEmail(email);
           setIsWaitingForVerification(true);
